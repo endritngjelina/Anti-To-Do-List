@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-To-Do List - Professional Productivity Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #FF9500;
+            --secondary-color: #232F3E;
+            --accent-color: #146EB4;
+            --danger-color: #D13212;
+            --success-color: #067D62;
+            --background: #FAFAFA;
+            --surface: #FFFFFF;
+            --text-primary: #0F1111;
+            --text-secondary: #565959;
+            --border: #D5D9D9;
+            --shadow: rgba(15, 17, 17, 0.15);
+        }
+
+        body {
+            font-family: 'Amazon Ember', 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--background) 0%, #F0F2F2 100%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow);
+            text-align: center;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px var(--shadow);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .todo-section {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 6px 20px var(--shadow);
+        }
+
+        .input-section {
+            margin-bottom: 2rem;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .todo-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+            background: var(--surface);
+        }
+
+        .todo-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(20, 110, 180, 0.1);
+        }
+
+        .category-select {
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: var(--surface);
+            cursor: pointer;
+        }
+
+        .add-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .add-btn:hover {
+            background: #E67E00;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 149, 0, 0.3);
+        }
+
+        .add-btn:active {
+            transform: translateY(0);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            background: var(--background);
+            border: 2px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .filter-tab.active {
+            background: var(--accent-color);
+            color: white;
+            border-color: var(--accent-color);
+        }
+
+        .filter-tab:hover:not(.active) {
+            background: white;
+            border-color: var(--accent-color);
+        }
+
+        .todo-list {
+            min-height: 200px;
+        }
+
+        .todo-item {
+            background: var(--background);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .todo-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 4px 16px var(--shadow);
+        }
+
+        .todo-item.refused {
+            background: linear-gradient(135deg, #FFF5F5 0%, #FED7D7 100%);
+            border-color: var(--danger-color);
+            opacity: 0.8;
+        }
+
+        .todo-item.refused::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(209, 50, 18, 0.1) 10px,
+                rgba(209, 50, 18, 0.1) 20px
+            );
+            pointer-events: none;
+        }
+
+        .todo-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .todo-text {
+            flex: 1;
+        }
+
+        .todo-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .todo-item.refused .todo-title {
+            text-decoration: line-through;
+            color: var(--danger-color);
+        }
+
+        .todo-category {
+            background: var(--accent-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .todo-timestamp {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            background: none;
+            border: 2px solid;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .refuse-btn {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+        }
+
+        .refuse-btn:hover {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .unreject-btn {
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+
+        .unreject-btn:hover {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .delete-btn {
+            border-color: var(--text-secondary);
+            color: var(--text-secondary);
+        }
+
+        .delete-btn:hover {
+            background: var(--text-secondary);
+            color: white;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .quote-card {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #37475A 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(35, 47, 62, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-card::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            font-size: 8rem;
+            opacity: 0.1;
+            font-weight: bold;
+        }
+
+        .quote-text {
+            font-size: 1.1rem;
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-author {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-align: right;
+        }
+
+        .refresh-quote {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+            transition: background 0.3s ease;
+        }
+
+        .refresh-quote:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .productivity-tips {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .productivity-tips h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .tip-item {
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+        }
+
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state img {
+            width: 120px;
+            height: 120px;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+
+        .export-section {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .export-btn {
+            background: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            width: 100%;
+            margin-bottom: 0.5rem;
+            transition: background 0.3s ease;
+        }
+
+        .export-btn:hover {
+            background: #0F5A94;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-container {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .todo-item {
+            animation: slideIn 0.3s ease-out;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Anti-To-Do List</h1>
+            <p class="subtitle">Celebrate what you're NOT doing today. Professional productivity, reimagined.</p>
+        </div>
+
+        <div class="stats-bar">
+            <div class="stat-card">
+                <span class="stat-number" id="totalTasks">0</span>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="refusedTasks">0</span>
+                <div class="stat-label">Successfully Refused</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="productivityScore">0%</span>
+                <div class="stat-label">Refusal Rate</div>
+            </div>
+            <div class="stat-card">
+                <span class="stat-number" id="streakDays">1</span>
+                <div class="stat-label">Day Streak</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="todo-section">
+                <div class="input-section">
+                    <div class="input-container">
+                        <input type="text" class="todo-input" id="todoInput" placeholder="What are you refusing to do today?">
+                        <select class="category-select" id="categorySelect">
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="social">Social</option>
+                            <option value="health">Health</option>
+                            <option value="finance">Finance</option>
+                            <option value="learning">Learning</option>
+                        </select>
+                        <button class="add-btn" id="addBtn">Add Anti-Task</button>
+                    </div>
+                </div>
+
+                <div class="filter-tabs">
+                    <div class="filter-tab active" data-filter="all">All Tasks</div>
+                    <div class="filter-tab" data-filter="active">Active</div>
+                    <div class="filter-tab" data-filter="refused">Refused</div>
+                    <div class="filter-tab" data-filter="work">Work</div>
+                    <div class="filter-tab" data-filter="personal">Personal</div>
+                    <div class="filter-tab" data-filter="social">Social</div>
+                </div>
+
+                <div class="todo-list" id="todoList">
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">🚫</div>
+                        <h3>No anti-tasks yet!</h3>
+                        <p>Add something you're proudly refusing to do today.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="quote-card">
+                    <div class="quote-text" id="quoteText">The art of being wise is knowing what to overlook.</div>
+                    <div class="quote-author" id="quoteAuthor">— William James</div>
+                    <button class="refresh-quote" id="refreshQuote">New Quote</button>
+                </div>
+
+                <div class="productivity-tips">
+                    <h3>🎯 Anti-Productivity Tips</h3>
+                    <div class="tip-item">Perfect is the enemy of done - so don't even start!</div>
+                    <div class="tip-item">Multitasking is overrated. Try no-tasking instead.</div>
+                    <div class="tip-item">The best meetings are the ones you don't attend.</div>
+                    <div class="tip-item">Email can wait. Everything is less urgent than it seems.</div>
+                    <div class="tip-item">Sometimes the most productive thing is a strategic nap.</div>
+                </div>
+
+                <div class="export-section">
+                    <h3 style="margin-bottom: 1rem; color: var(--secondary-color);">📊 Export Data</h3>
+                    <button class="export-btn" id="exportJson">Export as JSON</button>
+                    <button class="export-btn" id="exportCsv">Export as CSV</button>
+                    <button class="export-btn" id="clearAll">Clear All Data</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class AntiTodoApp {
+            constructor() {
+                this.tasks = JSON.parse(localStorage.getItem('antiTodoTasks')) || [];
+                this.currentFilter = 'all';
+                this.quotes = [
+                    { text: "The art of being wise is knowing what to overlook.", author: "William James" },
+                    { text: "It is not the man who has too little, but the man who craves more, who is poor.", author: "Seneca" },
+                    { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+                    { text: "The best way to get something done is to begin.", author: "Unknown Procrastinator (Never)" },
+                    { text: "I love deadlines. I like the whooshing sound they make as they fly by.", author: "Douglas Adams" },
+                    { text: "The trouble with having an open mind is that people keep coming along and trying to put things in it.", author: "Terry Pratchett" },
+                    { text: "I'm not lazy, I'm on energy saving mode.", author: "Anonymous" },
+                    { text: "Due tomorrow? Do tomorrow.", author: "Every College Student" },
+                    { text: "Procrastination is the art of keeping up with yesterday.", author: "Don Marquis" },
+                    { text: "Why do today what you can put off until tomorrow?", author: "Ancient Wisdom" },
+                    { text: "I'll stop procrastinating tomorrow.", author: "Everyone" },
+                    { text: "The sooner you fall behind, the more time you'll have to catch up.", author: "Optimistic Logic" }
+                ];
+                
+                this.initializeEventListeners();
+                this.render();
+                this.updateStats();
+                this.showRandomQuote();
+            }
+
+            initializeEventListeners() {
+                document.getElementById('addBtn').addEventListener('click', () => this.addTask());
+                document.getElementById('todoInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+                
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => this.setFilter(e.target.dataset.filter));
+                });
+
+                document.getElementById('refreshQuote').addEventListener('click', () => this.showRandomQuote());
+                document.getElementById('exportJson').addEventListener('click', () => this.exportData('json'));
+                document.getElementById('exportCsv').addEventListener('click', () => this.exportData('csv'));
+                document.getElementById('clearAll').addEventListener('click', () => this.clearAllData());
+            }
+
+            addTask() {
+                const input = document.getElementById('todoInput');
+                const categorySelect = document.getElementById('categorySelect');
+                const taskText = input.value.trim();
+                
+                if (!taskText) return;
+
+                const task = {
+                    id: Date.now() + Math.random(),
+                    text: taskText,
+                    category: categorySelect.value,
+                    refused: false,
+                    createdAt: new Date().toISOString(),
+                    refusedAt: null
+                };
+
+                this.tasks.unshift(task);
+                this.saveTasks();
+                this.render();
+                this.updateStats();
+                
+                input.value = '';
+                input.focus();
+            }
+
+            toggleTask(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (task) {
+                    task.refused = !task.refused;
+                    task.refusedAt = task.refused ? new Date().toISOString() : null;
+                    this.saveTasks();
+                    this.render();
+                    this.updateStats();
+                }
+            }
+
+            deleteTask(id) {
+                this.tasks = this.tasks.filter(t => t.id !== id);
+                this.saveTasks();
+                this.render();
+                this.updateStats();
+            }
+
+            setFilter(filter) {
+                this.currentFilter = filter;
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.filter === filter);
+                });
+                this.render();
+            }
+
+            getFilteredTasks() {
+                return this.tasks.filter(task => {
+                    switch (this.currentFilter) {
+                        case 'active': return !task.refused;
+                        case 'refused': return task.refused;
+                        case 'all': return true;
+                        default: return task.category === this.currentFilter;
+                    }
+                });
+            }
+
+            render() {
+                const todoList = document.getElementById('todoList');
+                const filteredTasks = this.getFilteredTasks();
+
+                if (filteredTasks.length === 0) {
+                    todoList.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 4rem; margin-bottom: 1rem;">🚫</div>
+                            <h3>No tasks in this category!</h3>
+                            <p>Add some anti-tasks to get started with productive procrastination.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                todoList.innerHTML = filteredTasks.map(task => `
+                    <div class="todo-item ${task.refused ? 'refused' : ''}" data-id="${task.id}">
+                        <div class="todo-content">
+                            <div class="todo-text">
+                                <div class="todo-category">${task.category.toUpperCase()}</div>
+                                <div class="todo-title">${this.escapeHtml(task.text)}</div>
+                                <div class="todo-timestamp">
+                                    Created: ${new Date(task.createdAt).toLocaleString()}
+                                    ${task.refusedAt ? `• Refused: ${new Date(task.refusedAt).toLocaleString()}` : ''}
+                                </div>
+                            </div>
+                            <div class="todo-actions">
+                                <button class="action-btn ${task.refused ? 'unreject-btn' : 'refuse-btn'}" 
+                                        onclick="app.toggleTask(${task.id})">
+                                    ${task.refused ? '↩ Unreject' : '✋ Refuse'}
+                                </button>
+                                <button class="action-btn delete-btn" onclick="app.deleteTask(${task.id})">
+                                    🗑 Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
+                const total = this.tasks.length;
+                const refused = this.tasks.filter(t => t.refused).length;
+                const refusalRate = total > 0 ? Math.round((refused / total) * 100) : 0;
+
+                document.getElementById('totalTasks').textContent = total;
+                document.getElementById('refusedTasks').textContent = refused;
+                document.getElementById('productivityScore').textContent = `${refusalRate}%`;
+                
+                // Simple streak calculation (could be enhanced with actual date tracking)
+                const streak = refused > 0 ? Math.min(refused, 7) : 1;
+                document.getElementById('streakDays').textContent = streak;
+            }
+
+            showRandomQuote() {
+                const quote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+                document.getElementById('quoteText').textContent = quote.text;
+                document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
+            }
+
+            exportData(format) {
+                if (this.tasks.length === 0) {
+                    alert('No data to export! Add some anti-tasks first.');
+                    return;
+                }
+
+                if (format === 'json') {
+                    const dataStr = JSON.stringify(this.tasks, null, 2);
+                    this.downloadFile(dataStr, 'anti-todo-list.json', 'application/json');
+                } else if (format === 'csv') {
+                    const headers = ['Task', 'Category', 'Status', 'Created At', 'Refused At'];
+                    const csvContent = [
+                        headers.join(','),
+                        ...this.tasks.map(task => [
+                            `"${task.text.replace(/"/g, '""')}"`,
+                            task.category,
+                            task.refused ? 'Refused' : 'Active',
+                            new Date(task.createdAt).toISOString(),
+                            task.refusedAt ? new Date(task.refusedAt).toISOString() : 'N/A'
+                        ].join(','))
+                    ].join('\n');
+                    
+                    this.downloadFile(csvContent, 'anti-todo-list.csv', 'text/csv');
+                }
+            }
+
+            downloadFile(content, fileName, contentType) {
+                const blob = new Blob([content], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+
+            clearAllData() {
+                if (confirm('Are you sure you want to clear all anti-tasks? This action cannot be undone.')) {
+                    this.tasks = [];
+                    this.saveTasks();
+                    this.render();
+                    this.updateStats();
+                }
+            }
+
+            saveTasks() {
+                localStorage.setItem('antiTodoTasks', JSON.stringify(this.tasks));
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the application
+        const app = new AntiTodoApp();
+
+        // Add some sample data for demonstration
+        if (app.tasks.length === 0) {
+            const sampleTasks = [
+                { 
+                    id: 1, 
+                    text: "Respond to that non-urgent email from last week", 
+                    category: "work", 
+                    refused: true, 
+                    createdAt: new Date(Date.now() - 86400000).toISOString(),
+                    refusedAt: new Date().toISOString()
+                },
+                { 
+                    id: 2, 
+                    text: "Attend the 3-hour meeting about meeting efficiency", 
+                    category: "work", 
+                    refused: false, 
+                    createdAt: new Date(Date.now() - 43200000).toISOString(),
+                    refusedAt: null
+                },
+                { 
+                    id: 3, 
+                    text: "Organize my desktop icons... again", 
+                    category: "personal", 
+                    refused: true, 
+                    createdAt: new Date(Date.now() - 21600000).toISOString(),
+                    refusedAt: new Date(Date.now() - 10800000).toISOString()
+                }
+            ];
+            
+            app.tasks = sampleTasks;
+            app.saveTasks();
+            app.render();
+            app.updateStats();
+        }
+    </script>
+</body>
+</html>
