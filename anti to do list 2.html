@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-To-Do | Productivity Reimagined</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #6366f1;
+            --secondary-color: #8b5cf6;
+            --accent-color: #f59e0b;
+            --success-color: #10b981;
+            --danger-color: #ef4444;
+            --dark-bg: #0f172a;
+            --card-bg: #1e293b;
+            --text-primary: #f8fafc;
+            --text-secondary: #cbd5e1;
+            --border-color: #334155;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--dark-bg);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            background-image: 
+                radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: 0 0 30px rgba(102, 102, 241, 0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: var(--card-bg);
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .anti-todo-section {
+            background: var(--card-bg);
+            padding: 2rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        #antiTodoInput {
+            flex: 1;
+            padding: 1rem 1.2rem;
+            background: rgba(30, 41, 59, 0.8);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        #antiTodoInput:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .priority-selector {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .priority-btn {
+            padding: 0.5rem 1rem;
+            border: 2px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .priority-btn.active {
+            border-color: var(--primary-color);
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .add-btn {
+            padding: 1rem 2rem;
+            background: var(--gradient-1);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            background: rgba(30, 41, 59, 0.5);
+            padding: 0.5rem;
+            border-radius: 12px;
+        }
+
+        .filter-tab {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .filter-tab.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .anti-todo-list {
+            space-y: 1rem;
+        }
+
+        .anti-todo-item {
+            background: rgba(30, 41, 59, 0.7);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .anti-todo-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .anti-todo-item.completed::before {
+            width: 100%;
+            background: var(--success-color);
+            opacity: 0.1;
+        }
+
+        .anti-todo-item.completed {
+            background: rgba(16, 185, 129, 0.1);
+            border-color: var(--success-color);
+        }
+
+        .anti-todo-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            transition: all 0.3s ease;
+            flex-shrink: 0;
+        }
+
+        .custom-checkbox.checked {
+            background: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .custom-checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .anti-todo-text {
+            flex: 1;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .anti-todo-item.completed .anti-todo-text {
+            text-decoration: line-through;
+            opacity: 0.6;
+        }
+
+        .priority-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .priority-low {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+        }
+
+        .priority-medium {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .priority-high {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger-color);
+            cursor: pointer;
+            padding: 0.5rem;
+            border-radius: 6px;
+            transition: all 0.3s ease;
+            opacity: 0.7;
+        }
+
+        .delete-btn:hover {
+            background: rgba(239, 68, 68, 0.1);
+            opacity: 1;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .quote-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient-2);
+        }
+
+        .quote-text {
+            font-style: italic;
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        .quote-author {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-align: right;
+        }
+
+        .refresh-quote {
+            background: none;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            width: 100%;
+        }
+
+        .refresh-quote:hover {
+            border-color: var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .productivity-tips {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .tip-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+
+        .tip-title {
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
+
+        .tip-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .stats-bar {
+                flex-direction: column;
+                align-items: center;
+                gap: 1rem;
+            }
+            
+            .input-container {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .priority-selector {
+                justify-content: center;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .celebration {
+            animation: celebrate 0.6s ease-in-out;
+        }
+
+        @keyframes celebrate {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>Anti-To-Do</h1>
+            <p>Embrace the art of productive procrastination. Sometimes the best productivity hack is knowing what NOT to do.</p>
+            
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalItems">0</div>
+                    <div class="stat-label">Total Avoided</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="completedItems">0</div>
+                    <div class="stat-label">Successfully Avoided</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="completionRate">0%</div>
+                    <div class="stat-label">Avoidance Rate</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <main class="anti-todo-section">
+                <h2 class="section-title">
+                    🚫 Things I Refuse to Do Today
+                </h2>
+                
+                <div class="input-group">
+                    <div class="input-container">
+                        <input 
+                            type="text" 
+                            id="antiTodoInput" 
+                            placeholder="What are you absolutely NOT doing today? (e.g., 'Check social media every 5 minutes')"
+                            maxlength="200"
+                        >
+                        <div class="priority-selector">
+                            <button class="priority-btn active" data-priority="low">Low</button>
+                            <button class="priority-btn" data-priority="medium">Medium</button>
+                            <button class="priority-btn" data-priority="high">High</button>
+                        </div>
+                        <button class="add-btn" id="addAntiTodo">Refuse</button>
+                    </div>
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">All Items</button>
+                    <button class="filter-tab" data-filter="pending">Pending</button>
+                    <button class="filter-tab" data-filter="completed">Avoided</button>
+                </div>
+
+                <div class="anti-todo-list" id="antiTodoList">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <h3>No Anti-To-Dos Yet</h3>
+                        <p>Start by adding something you absolutely refuse to do today!</p>
+                    </div>
+                </div>
+            </main>
+
+            <aside class="sidebar">
+                <div class="quote-card">
+                    <h3 class="section-title">💡 Snarky Wisdom</h3>
+                    <div class="quote-text" id="quoteText">
+                        "The key to productivity is not doing everything, but doing the right things. Sometimes that means doing absolutely nothing."
+                    </div>
+                    <div class="quote-author" id="quoteAuthor">- Productivity Guru</div>
+                    <button class="refresh-quote" id="refreshQuote">New Quote</button>
+                </div>
+
+                <div class="productivity-tips">
+                    <h3 class="section-title">🧠 Anti-Productivity Tips</h3>
+                    <div class="tip-item">
+                        <div class="tip-title">Strategic Procrastination</div>
+                        <div class="tip-description">Sometimes delaying a task reveals it wasn't important at all.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-title">Energy Management</div>
+                        <div class="tip-description">Saying no to low-value activities preserves energy for what matters.</div>
+                    </div>
+                    <div class="tip-item">
+                        <div class="tip-title">Focus Protection</div>
+                        <div class="tip-description">Avoiding distractions is as important as pursuing goals.</div>
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </div>
+
+    <script>
+        class AntiTodoApp {
+            constructor() {
+                this.antiTodos = this.loadFromStorage();
+                this.currentFilter = 'all';
+                this.currentPriority = 'low';
+                this.quotes = [
+                    { text: "The key to productivity is not doing everything, but doing the right things. Sometimes that means doing absolutely nothing.", author: "Productivity Guru" },
+                    { text: "I love deadlines. I like the whooshing sound they make as they fly by.", author: "Douglas Adams" },
+                    { text: "Procrastination is the art of keeping up with yesterday.", author: "Don Marquis" },
+                    { text: "The trouble with being punctual is that nobody's there to appreciate it.", author: "Franklin P. Jones" },
+                    { text: "I put the 'pro' in procrastination.", author: "Anonymous Genius" },
+                    { text: "Why do today what you can put off until tomorrow? Tomorrow's you problem.", author: "Future Self" },
+                    { text: "Multitasking: The art of doing twice as much as you should half as well as you could.", author: "Efficiency Expert" },
+                    { text: "I'm not lazy, I'm just highly motivated to do nothing.", author: "Couch Philosopher" },
+                    { text: "The best time to do something was yesterday. The second best time is tomorrow.", author: "Reformed Perfectionist" },
+                    { text: "I don't have a short attention span, I just... oh look, a butterfly!", author: "ADHD Advocate" }
+                ];
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.render();
+                this.updateStats();
+                this.setRandomQuote();
+            }
+
+            bindEvents() {
+                document.getElementById('addAntiTodo').addEventListener('click', () => this.addAntiTodo());
+                document.getElementById('antiTodoInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addAntiTodo();
+                });
+
+                // Priority selection
+                document.querySelectorAll('.priority-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.priority-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentPriority = e.target.dataset.priority;
+                    });
+                });
+
+                // Filter tabs
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => {
+                        document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentFilter = e.target.dataset.filter;
+                        this.render();
+                    });
+                });
+
+                // Quote refresh
+                document.getElementById('refreshQuote').addEventListener('click', () => this.setRandomQuote());
+            }
+
+            addAntiTodo() {
+                const input = document.getElementById('antiTodoInput');
+                const text = input.value.trim();
+                
+                if (!text) return;
+
+                const antiTodo = {
+                    id: Date.now(),
+                    text: text,
+                    completed: false,
+                    priority: this.currentPriority,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.antiTodos.unshift(antiTodo);
+                this.saveToStorage();
+                this.render();
+                this.updateStats();
+                
+                input.value = '';
+                input.focus();
+
+                // Add celebration animation
+                const addBtn = document.getElementById('addAntiTodo');
+                addBtn.classList.add('celebration');
+                setTimeout(() => addBtn.classList.remove('celebration'), 600);
+            }
+
+            toggleAntiTodo(id) {
+                const item = this.antiTodos.find(item => item.id === id);
+                if (item) {
+                    item.completed = !item.completed;
+                    this.saveToStorage();
+                    this.render();
+                    this.updateStats();
+                }
+            }
+
+            deleteAntiTodo(id) {
+                this.antiTodos = this.antiTodos.filter(item => item.id !== id);
+                this.saveToStorage();
+                this.render();
+                this.updateStats();
+            }
+
+            getFilteredItems() {
+                switch (this.currentFilter) {
+                    case 'completed':
+                        return this.antiTodos.filter(item => item.completed);
+                    case 'pending':
+                        return this.antiTodos.filter(item => !item.completed);
+                    default:
+                        return this.antiTodos;
+                }
+            }
+
+            render() {
+                const container = document.getElementById('antiTodoList');
+                const filteredItems = this.getFilteredItems();
+
+                if (filteredItems.length === 0) {
+                    const filterText = this.currentFilter === 'all' ? 'anti-to-dos' : 
+                                     this.currentFilter === 'completed' ? 'avoided items' : 'pending items';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">${this.currentFilter === 'completed' ? '🎉' : '🎯'}</div>
+                            <h3>No ${filterText} yet</h3>
+                            <p>${this.currentFilter === 'completed' ? 'Start avoiding some tasks to see them here!' : 
+                                 this.currentFilter === 'pending' ? 'All tasks have been successfully avoided!' :
+                                 'Start by adding something you absolutely refuse to do today!'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = filteredItems.map(item => `
+                    <div class="anti-todo-item ${item.completed ? 'completed' : ''} fade-in">
+                        <div class="anti-todo-content">
+                            <div class="custom-checkbox ${item.completed ? 'checked' : ''}" 
+                                 onclick="app.toggleAntiTodo(${item.id})"></div>
+                            <div class="anti-todo-text">${this.escapeHtml(item.text)}</div>
+                            <span class="priority-badge priority-${item.priority}">${item.priority}</span>
+                            <button class="delete-btn" onclick="app.deleteAntiTodo(${item.id})" title="Delete">
+                                🗑️
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
+                const total = this.antiTodos.length;
+                const completed = this.antiTodos.filter(item => item.completed).length;
+                const rate = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+                document.getElementById('totalItems').textContent = total;
+                document.getElementById('completedItems').textContent = completed;
+                document.getElementById('completionRate').textContent = `${rate}%`;
+            }
+
+            setRandomQuote() {
+                const randomQuote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+                document.getElementById('quoteText').textContent = randomQuote.text;
+                document.getElementById('quoteAuthor').textContent = `- ${randomQuote.author}`;
+            }
+
+            saveToStorage() {
+                const data = JSON.stringify(this.antiTodos);
+                // Using a simple variable instead of localStorage
+                window.antiTodoData = data;
+            }
+
+            loadFromStorage() {
+                try {
+                    const data = window.antiTodoData;
+                    return data ? JSON.parse(data) : [];
+                } catch (e) {
+                    return [];
+                }
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the app
+        const app = new AntiTodoApp();
+
+        // Add some keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + / to focus input
+            if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+                e.preventDefault();
+                document.getElementById('antiTodoInput').focus();
+            }
+            
+            // Escape to clear input
+            if (e.key === 'Escape') {
+                document.getElementById('antiTodoInput').value = '';
+                document.getElementById('antiTodoInput').blur();
+            }
+        });
+
+        // Add some sample data for demonstration
+        if (app.antiTodos.length === 0) {
+            const sampleItems = [
+                { text: "Check social media every 5 minutes", priority: "high" },
+                { text: "Reorganize my desk for the 3rd time this week", priority: "low" },
+                { text: "Start another Netflix series when I have deadlines", priority: "medium" }
+            ];
+            
+            sampleItems.forEach(item => {
+                app.antiTodos.push({
+                    id: Date.now() + Math.random(),
+                    text: item.text,
+                    completed: false,
+                    priority: item.priority,
+                    createdAt: new Date().toISOString()
+                });
+            });
+            
+            app.saveToStorage();
+            app.render();
+            app.updateStats();
+        }
+    </script>
+</body>
+</html>
