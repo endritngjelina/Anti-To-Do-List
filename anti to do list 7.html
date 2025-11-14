@@ -1,0 +1,1106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-To-Do List - Productivity Reimagined</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --dark-bg: #1a1a2e;
+            --darker-bg: #16213e;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #b8c6db;
+            --border-color: rgba(255, 255, 255, 0.2);
+            --shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            --glow: 0 0 20px rgba(102, 126, 234, 0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--dark-bg);
+            background-image: 
+                radial-gradient(circle at 25% 25%, rgba(102, 126, 234, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 75% 75%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: var(--primary-gradient);
+            border-radius: 2px;
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: var(--glow);
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--primary-gradient);
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--success-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .todo-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 2rem;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            gap: 1rem;
+        }
+
+        #taskInput {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        #taskInput:focus {
+            outline: none;
+            border-color: rgba(102, 126, 234, 0.8);
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #taskInput::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--secondary-gradient);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(240, 147, 251, 0.4);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .filter-btn.active,
+        .filter-btn:hover {
+            background: var(--primary-gradient);
+            color: white;
+            border-color: transparent;
+        }
+
+        .task-list {
+            space-y: 1rem;
+        }
+
+        .task-item {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(5px);
+        }
+
+        .task-item.refused {
+            background: linear-gradient(90deg, rgba(79, 172, 254, 0.1) 0%, rgba(0, 242, 254, 0.1) 100%);
+            border-color: rgba(79, 172, 254, 0.3);
+        }
+
+        .task-item.refused::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: var(--success-gradient);
+        }
+
+        .task-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 1.1rem;
+            line-height: 1.5;
+        }
+
+        .task-item.refused .task-text {
+            text-decoration: line-through;
+            opacity: 0.7;
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .task-btn {
+            padding: 0.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+
+        .refuse-btn {
+            background: var(--success-gradient);
+            color: white;
+        }
+
+        .refuse-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(79, 172, 254, 0.4);
+        }
+
+        .delete-btn {
+            background: var(--secondary-gradient);
+            color: white;
+        }
+
+        .delete-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .quote-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-card::before {
+            content: '"';
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            font-size: 6rem;
+            color: rgba(102, 126, 234, 0.2);
+            font-family: serif;
+        }
+
+        .quote-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            font-style: italic;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-author {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            text-align: right;
+        }
+
+        .productivity-tips {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .tips-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            background: var(--secondary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .tip-item {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            border-left: 3px solid transparent;
+            background-image: linear-gradient(rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.05)),
+                             var(--primary-gradient);
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .floating-action {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary-gradient);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: var(--shadow);
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .floating-action:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(102, 126, 234, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .input-wrapper {
+                flex-direction: column;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+        }
+
+        .task-priority {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
+        }
+
+        .priority-high {
+            background: rgba(245, 87, 108, 0.2);
+            color: #f5576c;
+            border: 1px solid rgba(245, 87, 108, 0.3);
+        }
+
+        .priority-medium {
+            background: rgba(255, 193, 7, 0.2);
+            color: #ffc107;
+            border: 1px solid rgba(255, 193, 7, 0.3);
+        }
+
+        .priority-low {
+            background: rgba(79, 172, 254, 0.2);
+            color: #4facfe;
+            border: 1px solid rgba(79, 172, 254, 0.3);
+        }
+
+        .task-category {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            background: rgba(118, 75, 162, 0.2);
+            color: #764ba2;
+            border: 1px solid rgba(118, 75, 162, 0.3);
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-ban"></i> Anti-To-Do List</h1>
+            <p class="subtitle">Embrace what you refuse to do today - a revolutionary approach to productivity</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number" id="totalTasks">0</div>
+                <div class="stat-label">Total Tasks</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="refusedTasks">0</div>
+                <div class="stat-label">Refused Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="refusalRate">0%</div>
+                <div class="stat-label">Refusal Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number" id="productivity">0</div>
+                <div class="stat-label">Productivity Score</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="todo-section">
+                <div class="input-group">
+                    <div class="input-wrapper">
+                        <input type="text" id="taskInput" placeholder="What will you absolutely refuse to do today?" maxlength="200">
+                        <select id="prioritySelect" class="btn" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border-color);">
+                            <option value="low">Low Priority</option>
+                            <option value="medium">Medium Priority</option>
+                            <option value="high">High Priority</option>
+                        </select>
+                        <select id="categorySelect" class="btn" style="background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border-color);">
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="health">Health</option>
+                            <option value="social">Social</option>
+                            <option value="learning">Learning</option>
+                            <option value="other">Other</option>
+                        </select>
+                        <button id="addTaskBtn" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Refuse
+                        </button>
+                    </div>
+                </div>
+
+                <div class="action-buttons">
+                    <button id="clearAllBtn" class="btn btn-secondary">
+                        <i class="fas fa-trash"></i> Clear All
+                    </button>
+                    <button id="exportBtn" class="btn btn-primary">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                    <button id="shuffleQuoteBtn" class="btn btn-secondary">
+                        <i class="fas fa-shuffle"></i> New Quote
+                    </button>
+                </div>
+
+                <div class="filter-buttons">
+                    <button class="filter-btn active" data-filter="all">All Tasks</button>
+                    <button class="filter-btn" data-filter="refused">Refused</button>
+                    <button class="filter-btn" data-filter="pending">Pending</button>
+                    <button class="filter-btn" data-filter="high">High Priority</button>
+                    <button class="filter-btn" data-filter="work">Work</button>
+                    <button class="filter-btn" data-filter="personal">Personal</button>
+                </div>
+
+                <div id="taskList" class="task-list">
+                    <div class="empty-state">
+                        <i class="fas fa-leaf"></i>
+                        <h3>Your refusal sanctuary awaits</h3>
+                        <p>Add something you absolutely refuse to do today</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="quote-card">
+                    <div class="quote-text" id="quoteText">
+                        The art of saying no is the foundation of all other productivity.
+                    </div>
+                    <div class="quote-author" id="quoteAuthor">— Warren Buffett (paraphrased)</div>
+                </div>
+
+                <div class="productivity-tips">
+                    <h3 class="tips-title"><i class="fas fa-lightbulb"></i> Anti-Productivity Tips</h3>
+                    <div class="tip-item">
+                        <strong>Strategic Procrastination:</strong> Some tasks become irrelevant if you wait long enough.
+                    </div>
+                    <div class="tip-item">
+                        <strong>Energy Preservation:</strong> Refusing low-value tasks saves energy for what matters.
+                    </div>
+                    <div class="tip-item">
+                        <strong>Boundary Setting:</strong> Every "no" strengthens your decision-making muscle.
+                    </div>
+                    <div class="tip-item">
+                        <strong>Focus Enhancement:</strong> Less noise equals clearer priorities.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <button class="floating-action" id="floatingAdd" title="Quick Add">
+        <i class="fas fa-plus"></i>
+    </button>
+
+    <script>
+        class AntiTodoApp {
+            constructor() {
+                this.tasks = JSON.parse(localStorage.getItem('antiTodoTasks')) || [];
+                this.currentFilter = 'all';
+                this.quotes = [
+                    { text: "The art of saying no is the foundation of all other productivity.", author: "Warren Buffett (paraphrased)" },
+                    { text: "You are not required to set yourself on fire to keep other people warm.", author: "Unknown" },
+                    { text: "The word 'no' is a complete sentence.", author: "Anne Lamott" },
+                    { text: "Productivity isn't about doing more, it's about doing what matters.", author: "Tim Ferriss" },
+                    { text: "Sometimes the most productive thing you can do is refuse to be productive.", author: "Anti-Todo Philosophy" },
+                    { text: "Every yes is a thousand nos in disguise.", author: "Modern Wisdom" },
+                    { text: "The best way to get something done is to begin by refusing to do something else.", author: "Reverse Psychology 101" },
+                    { text: "Not today, Satan. Not today.", author: "Internet Wisdom" }
+                ];
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.render();
+                this.updateStats();
+                this.shuffleQuote();
+            }
+
+            bindEvents() {
+                document.getElementById('addTaskBtn').addEventListener('click', () => this.addTask());
+                document.getElementById('taskInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+                document.getElementById('clearAllBtn').addEventListener('click', () => this.clearAll());
+                document.getElementById('exportBtn').addEventListener('click', () => this.exportTasks());
+                document.getElementById('shuffleQuoteBtn').addEventListener('click', () => this.shuffleQuote());
+                document.getElementById('floatingAdd').addEventListener('click', () => {
+                    document.getElementById('taskInput').focus();
+                });
+
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentFilter = e.target.dataset.filter;
+                        this.render();
+                    });
+                });
+            }
+
+            addTask() {
+                const input = document.getElementById('taskInput');
+                const priority = document.getElementById('prioritySelect').value;
+                const category = document.getElementById('categorySelect').value;
+                const text = input.value.trim();
+
+                if (!text) return;
+
+                const task = {
+                    id: Date.now(),
+                    text,
+                    priority,
+                    category,
+                    refused: false,
+                    createdAt: new Date().toISOString(),
+                    refusedAt: null
+                };
+
+                this.tasks.unshift(task);
+                this.save();
+                this.render();
+                this.updateStats();
+                input.value = '';
+
+                // Add success animation
+                this.showNotification('Task added to your refusal list!', 'success');
+            }
+
+            toggleRefusal(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (task) {
+                    task.refused = !task.refused;
+                    task.refusedAt = task.refused ? new Date().toISOString() : null;
+                    this.save();
+                    this.render();
+                    this.updateStats();
+                    
+                    const message = task.refused ? 
+                        `Excellently refused: "${task.text}"!` : 
+                        `Reconsidering: "${task.text}"`;
+                    this.showNotification(message, task.refused ? 'success' : 'info');
+                }
+            }
+
+            deleteTask(id) {
+                this.tasks = this.tasks.filter(t => t.id !== id);
+                this.save();
+                this.render();
+                this.updateStats();
+                this.showNotification('Task eliminated from existence!', 'success');
+            }
+
+            clearAll() {
+                if (this.tasks.length === 0) return;
+                
+                if (confirm('Are you sure you want to clear all tasks? This action cannot be undone.')) {
+                    this.tasks = [];
+                    this.save();
+                    this.render();
+                    this.updateStats();
+                    this.showNotification('All tasks cleared! Fresh start achieved.', 'success');
+                }
+            }
+
+            exportTasks() {
+                if (this.tasks.length === 0) {
+                    this.showNotification('No tasks to export!', 'warning');
+                    return;
+                }
+
+                const data = {
+                    exportDate: new Date().toISOString(),
+                    totalTasks: this.tasks.length,
+                    refusedTasks: this.tasks.filter(t => t.refused).length,
+                    tasks: this.tasks
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `anti-todo-list-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                this.showNotification('Tasks exported successfully!', 'success');
+            }
+
+            shuffleQuote() {
+                const randomQuote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+                document.getElementById('quoteText').textContent = randomQuote.text;
+                document.getElementById('quoteAuthor').textContent = `— ${randomQuote.author}`;
+            }
+
+            filterTasks() {
+                return this.tasks.filter(task => {
+                    switch (this.currentFilter) {
+                        case 'refused': return task.refused;
+                        case 'pending': return !task.refused;
+                        case 'high': return task.priority === 'high';
+                        case 'work': return task.category === 'work';
+                        case 'personal': return task.category === 'personal';
+                        default: return true;
+                    }
+                });
+            }
+
+            render() {
+                const taskList = document.getElementById('taskList');
+                const filteredTasks = this.filterTasks();
+
+                if (filteredTasks.length === 0) {
+                    taskList.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-${this.currentFilter === 'all' ? 'leaf' : 'filter'}"></i>
+                            <h3>${this.currentFilter === 'all' ? 'Your refusal sanctuary awaits' : 'No tasks match this filter'}</h3>
+                            <p>${this.currentFilter === 'all' ? 'Add something you absolutely refuse to do today' : 'Try a different filter or add more tasks'}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                taskList.innerHTML = filteredTasks.map(task => `
+                    <div class="task-item ${task.refused ? 'refused' : ''}" data-id="${task.id}">
+                        <div class="task-content">
+                            <div class="task-text">
+                                ${task.text}
+                                <span class="task-priority priority-${task.priority}">${task.priority.toUpperCase()}</span>
+                                <span class="task-category">${task.category.toUpperCase()}</span>
+                            </div>
+                            <div class="task-actions">
+                                <button class="task-btn refuse-btn" onclick="app.toggleRefusal(${task.id})" title="${task.refused ? 'Undo refusal' : 'Refuse this task'}">
+                                    <i class="fas fa-${task.refused ? 'undo' : 'ban'}"></i>
+                                </button>
+                                <button class="task-btn delete-btn" onclick="app.deleteTask(${task.id})" title="Delete task">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
+                const total = this.tasks.length;
+                const refused = this.tasks.filter(t => t.refused).length;
+                const refusalRate = total > 0 ? Math.round((refused / total) * 100) : 0;
+                const productivityScore = Math.min(100, refused * 10 + refusalRate);
+
+                document.getElementById('totalTasks').textContent = total;
+                document.getElementById('refusedTasks').textContent = refused;
+                document.getElementById('refusalRate').textContent = `${refusalRate}%`;
+                document.getElementById('productivity').textContent = productivityScore;
+            }
+
+            showNotification(message, type = 'info') {
+                // Create notification element
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 1rem 1.5rem;
+                    background: ${type === 'success' ? 'var(--success-gradient)' : type === 'warning' ? 'var(--secondary-gradient)' : 'var(--primary-gradient)'};
+                    color: white;
+                    border-radius: 12px;
+                    box-shadow: var(--shadow);
+                    z-index: 10000;
+                    font-weight: 500;
+                    animation: slideInRight 0.3s ease-out;
+                    max-width: 300px;
+                    backdrop-filter: blur(10px);
+                `;
+                
+                notification.innerHTML = `
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'}"></i>
+                    ${message}
+                `;
+
+                document.body.appendChild(notification);
+
+                // Auto remove after 3 seconds
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutRight 0.3s ease-in';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 3000);
+            }
+
+            save() {
+                localStorage.setItem('antiTodoTasks', JSON.stringify(this.tasks));
+            }
+        }
+
+        // Initialize the app
+        const app = new AntiTodoApp();
+
+        // Add CSS animations for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+
+            /* Pulse animation for floating button */
+            .floating-action {
+                animation: pulse 2s infinite;
+            }
+
+            @keyframes pulse {
+                0% {
+                    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.7);
+                }
+                70% {
+                    box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+                }
+                100% {
+                    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+                }
+            }
+
+            /* Smooth transitions for task items */
+            .task-item {
+                animation: fadeInUp 0.3s ease-out;
+            }
+
+            @keyframes fadeInUp {
+                from {
+                    opacity: 0;
+                    transform: translateY(20px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateY(0);
+                }
+            }
+
+            /* Hover effects for better UX */
+            .task-item:hover .task-actions {
+                opacity: 1;
+            }
+
+            .task-actions {
+                opacity: 0.7;
+                transition: opacity 0.3s ease;
+            }
+
+            /* Enhanced button interactions */
+            .btn:active {
+                transform: scale(0.98);
+            }
+
+            .task-btn:active {
+                transform: scale(0.9);
+            }
+
+            /* Loading state for buttons */
+            .btn.loading {
+                opacity: 0.7;
+                pointer-events: none;
+            }
+
+            .btn.loading::after {
+                content: '';
+                width: 16px;
+                height: 16px;
+                border: 2px solid transparent;
+                border-top: 2px solid currentColor;
+                border-radius: 50%;
+                animation: spin 1s linear infinite;
+                display: inline-block;
+                margin-left: 8px;
+            }
+
+            @keyframes spin {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+            }
+
+            /* Dark mode enhancements */
+            .task-item:hover {
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            }
+
+            /* Mobile optimizations */
+            @media (max-width: 480px) {
+                .floating-action {
+                    bottom: 1rem;
+                    right: 1rem;
+                    width: 50px;
+                    height: 50px;
+                    font-size: 1.2rem;
+                }
+
+                .task-content {
+                    flex-direction: column;
+                    align-items: flex-start;
+                    gap: 1rem;
+                }
+
+                .task-actions {
+                    align-self: flex-end;
+                    opacity: 1;
+                }
+
+                .input-wrapper {
+                    gap: 0.5rem;
+                }
+
+                #taskInput {
+                    margin-bottom: 0.5rem;
+                }
+
+                .filter-buttons {
+                    justify-content: center;
+                }
+
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+
+            /* Accessibility improvements */
+            .btn:focus,
+            .task-btn:focus,
+            .filter-btn:focus {
+                outline: 2px solid rgba(102, 126, 234, 0.8);
+                outline-offset: 2px;
+            }
+
+            /* High contrast mode support */
+            @media (prefers-contrast: high) {
+                :root {
+                    --border-color: rgba(255, 255, 255, 0.5);
+                    --card-bg: rgba(255, 255, 255, 0.2);
+                }
+            }
+
+            /* Reduced motion support */
+            @media (prefers-reduced-motion: reduce) {
+                * {
+                    animation-duration: 0.01ms !important;
+                    animation-iteration-count: 1 !important;
+                    transition-duration: 0.01ms !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Add keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ctrl/Cmd + Enter to add task
+            if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                e.preventDefault();
+                app.addTask();
+            }
+            
+            // Escape to clear input
+            if (e.key === 'Escape') {
+                document.getElementById('taskInput').value = '';
+                document.getElementById('taskInput').blur();
+            }
+            
+            // Ctrl/Cmd + Shift + C to clear all
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                app.clearAll();
+            }
+        });
+
+        // Add service worker for offline functionality (basic implementation)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // Register service worker for offline capability
+                // This would be implemented in a production environment
+                console.log('Service Worker support detected');
+            });
+        }
+
+        // Analytics tracking (placeholder for production)
+        function trackEvent(action, category = 'AntiTodo') {
+            // In production, this would integrate with analytics
+            console.log(`Analytics: ${category} - ${action}`);
+        }
+
+        // Track app usage
+        trackEvent('App Loaded');
+
+        // Add data persistence backup
+        setInterval(() => {
+            app.save();
+        }, 30000); // Auto-save every 30 seconds
+
+        // Welcome message for first-time users
+        if (app.tasks.length === 0 && !localStorage.getItem('welcomeShown')) {
+            setTimeout(() => {
+                app.showNotification('Welcome to Anti-Todo! Add your first refusal to get started.', 'info');
+                localStorage.setItem('welcomeShown', 'true');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>
