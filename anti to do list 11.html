@@ -1,0 +1,1516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-To-Do | Productivity Rebellion</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --dark-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            --success-color: #e74c3c;
+            --text-light: #ecf0f1;
+            --text-dark: #2c3e50;
+            --card-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            --hover-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            --border-radius: 16px;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-light);
+            overflow-x: hidden;
+        }
+
+        .background-animation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--primary-gradient);
+        }
+
+        .floating-shapes {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .shape {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+        }
+
+        .shape:nth-child(1) { width: 80px; height: 80px; left: 10%; animation-delay: 0s; }
+        .shape:nth-child(2) { width: 120px; height: 120px; left: 20%; animation-delay: 5s; }
+        .shape:nth-child(3) { width: 60px; height: 60px; left: 70%; animation-delay: 10s; }
+        .shape:nth-child(4) { width: 100px; height: 100px; left: 85%; animation-delay: 15s; }
+
+        @keyframes float {
+            0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: slideInDown 0.8s ease-out;
+        }
+
+        .header h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(45deg, #fff, #f8f9fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            padding: 1.5rem 2.5rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--secondary-gradient);
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .stat-item:hover::before {
+            transform: scaleX(1);
+        }
+
+        .stat-item:hover {
+            transform: translateY(-4px) scale(1.05);
+            background: rgba(255, 255, 255, 0.18);
+            box-shadow: 
+                0 12px 32px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: #fff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0.5rem;
+            transition: all 0.3s ease;
+            background: linear-gradient(45deg, #fff, #f8f9fa, #e9ecef);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .stat-item:hover .stat-number {
+            transform: scale(1.1);
+            text-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            animation: slideInUp 0.8s ease-out 0.2s both;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transition: left 0.8s ease-out;
+        }
+
+        .card::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            border-radius: var(--border-radius);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
+        }
+
+        .card:hover::before {
+            left: 100%;
+        }
+
+        .card:hover::after {
+            opacity: 1;
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: var(--hover-shadow), 0 0 40px rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .card:active {
+            transform: translateY(-4px) scale(1.01);
+        }
+
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-container {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .task-input {
+            width: 100%;
+            padding: 1.2rem 1.8rem;
+            border: none;
+            border-radius: var(--border-radius);
+            background: rgba(255, 255, 255, 0.08);
+            color: white;
+            font-size: 1.1rem;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+            font-weight: 400;
+            letter-spacing: 0.5px;
+        }
+
+        .task-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+            font-style: italic;
+        }
+
+        .task-input:focus {
+            outline: none;
+            background: rgba(255, 255, 255, 0.15);
+            border-color: #f5576c;
+            transform: scale(1.03);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.1),
+                0 0 0 4px rgba(245, 87, 108, 0.2),
+                0 8px 32px rgba(245, 87, 108, 0.15);
+        }
+
+        .task-input:hover {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .add-btn {
+            background: var(--secondary-gradient);
+            border: none;
+            padding: 1.2rem 2.5rem;
+            border-radius: var(--border-radius);
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            box-shadow: 
+                0 8px 24px rgba(245, 87, 108, 0.35),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            font-size: 0.95rem;
+        }
+
+        .add-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+
+        .add-btn:hover::before {
+            left: 100%;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 
+                0 12px 32px rgba(245, 87, 108, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3),
+                0 0 20px rgba(245, 87, 108, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .add-btn:active {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 
+                0 6px 16px rgba(245, 87, 108, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .add-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .task-list {
+            max-height: 400px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+        }
+
+        .task-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .task-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .task-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 1.2rem;
+            margin-bottom: 0.8rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideInLeft 0.6s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .task-item::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            width: 4px;
+            background: var(--secondary-gradient);
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            border-radius: 0 2px 2px 0;
+        }
+
+        .task-item:hover::before {
+            transform: scaleY(1);
+        }
+
+        .task-item:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(8px) translateY(-2px);
+            border-color: rgba(255, 255, 255, 0.2);
+            box-shadow: 
+                0 8px 24px rgba(0, 0, 0, 0.15),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .task-item.refused {
+            background: rgba(231, 76, 60, 0.15);
+            border-color: rgba(231, 76, 60, 0.3);
+            text-decoration: line-through;
+            opacity: 0.85;
+            transform: scale(0.98);
+        }
+
+        .task-item.refused::before {
+            background: var(--success-color);
+            transform: scaleY(1);
+        }
+
+        .task-item.refused:hover {
+            opacity: 1;
+            transform: translateX(8px) translateY(-2px) scale(1);
+        }
+
+        .task-item.completing {
+            animation: completeTask 0.6s ease-out;
+        }
+
+        @keyframes completeTask {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background: rgba(231, 76, 60, 0.2); }
+            100% { transform: scale(0.98); }
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 50%;
+            margin-right: 1.2rem;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .task-checkbox::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .task-checkbox:hover {
+            border-color: rgba(255, 255, 255, 0.6);
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.1),
+                0 0 0 4px rgba(231, 76, 60, 0.1);
+        }
+
+        .task-checkbox.checked {
+            background: var(--success-color);
+            border-color: var(--success-color);
+            box-shadow: 
+                inset 0 2px 4px rgba(0, 0, 0, 0.2),
+                0 0 0 4px rgba(231, 76, 60, 0.2),
+                0 4px 12px rgba(231, 76, 60, 0.3);
+        }
+
+        .task-checkbox.checked::before {
+            transform: translate(-50%, -50%) scale(0);
+        }
+
+        .task-checkbox.checked::after {
+            content: '✗';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(1);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            animation: checkPop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        @keyframes checkPop {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(-180deg); }
+            80% { transform: translate(-50%, -50%) scale(1.2) rotate(10deg); }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); }
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 1rem;
+            line-height: 1.4;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            padding: 0.8rem;
+            border-radius: 50%;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.1rem;
+            position: relative;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .delete-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 50%;
+            transform: scale(0);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        .delete-btn:hover::before {
+            transform: scale(1);
+        }
+
+        .delete-btn:hover {
+            color: #e74c3c;
+            transform: scale(1.2) rotate(5deg);
+            background: rgba(231, 76, 60, 0.15);
+        }
+
+        .delete-btn:active {
+            transform: scale(0.95);
+        }
+
+        .quote-section {
+            grid-column: 1 / -1;
+            text-align: center;
+            margin-top: 2rem;
+        }
+
+        .quote-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 4px solid var(--success-color);
+        }
+
+        .quote-text {
+            font-size: 1.3rem;
+            font-style: italic;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+        }
+
+        .quote-author {
+            font-size: 1rem;
+            opacity: 0.8;
+            text-align: right;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 56px;
+            height: 56px;
+            color: white;
+            cursor: pointer;
+            backdrop-filter: blur(15px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(180deg) scale(1.1);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 
+                0 12px 32px rgba(0, 0, 0, 0.2),
+                0 0 0 4px rgba(255, 255, 255, 0.1);
+        }
+
+        .theme-toggle:active {
+            transform: rotate(180deg) scale(0.95);
+        }
+
+        .motivation-meter {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .motivation-fill {
+            height: 100%;
+            background: var(--secondary-gradient);
+            border-radius: 4px;
+            transition: width 0.5s ease;
+            position: relative;
+        }
+
+        .motivation-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            opacity: 0.7;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        /* Animations */
+        @keyframes slideInDown {
+            from { transform: translateY(-100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { transform: translateX(-50px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* Enhanced micro-interactions and advanced animations */
+        .pulse-animation {
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(245, 87, 108, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(245, 87, 108, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(245, 87, 108, 0); }
+        }
+
+        /* Advanced loading states */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% { left: -100%; }
+            100% { left: 100%; }
+        }
+
+        /* Enhanced focus styles for accessibility */
+        .task-input:focus,
+        .add-btn:focus,
+        .delete-btn:focus,
+        .theme-toggle:focus {
+            outline: 2px solid #f5576c;
+            outline-offset: 2px;
+        }
+
+        /* Improved error states */
+        .error-shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Success celebration animation */
+        .celebrate {
+            animation: celebrate 0.6s ease-out;
+        }
+
+        @keyframes celebrate {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1) rotate(2deg); }
+            100% { transform: scale(1); }
+        }
+
+        /* Enhanced empty state */
+        .empty-state {
+            text-align: center;
+            padding: 3rem 2rem;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+        }
+
+        .empty-state:hover {
+            opacity: 1;
+            transform: translateY(-2px);
+        }
+
+        .empty-state i {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.4;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Enhanced scroll indicators */
+        .scroll-gradient-top,
+        .scroll-gradient-bottom {
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 20px;
+            pointer-events: none;
+            z-index: 2;
+            transition: opacity 0.3s ease;
+        }
+
+        .scroll-gradient-top {
+            top: 0;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        .scroll-gradient-bottom {
+            bottom: 0;
+            background: linear-gradient(to top, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        /* Interactive background elements */
+        .interactive-bg {
+            position: fixed;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1), transparent);
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+            z-index: -1;
+        }
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .stats-bar {
+                gap: 1rem;
+            }
+            
+            .stat-item {
+                padding: 0.75rem 1.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+
+        /* Dark theme toggle */
+        body.dark-theme {
+            background: var(--dark-gradient);
+        }
+
+        .dark-theme .background-animation {
+            background: var(--dark-gradient);
+        }
+
+        .productivity-tip {
+            background: rgba(52, 152, 219, 0.1);
+            border-left: 4px solid #3498db;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 var(--border-radius) var(--border-radius) 0;
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="background-animation">
+        <div class="floating-shapes">
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+            <div class="shape"></div>
+        </div>
+    </div>
+
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-ban"></i> Anti-To-Do</h1>
+            <p>The productivity app for rebels who refuse to conform</p>
+            
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-number" id="total-tasks">0</div>
+                    <div class="stat-label">Tasks Added</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="refused-tasks">0</div>
+                    <div class="stat-label">Successfully Avoided</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="rebellion-score">0%</div>
+                    <div class="stat-label">Rebellion Score</div>
+                </div>
+            </div>
+
+            <div class="motivation-meter">
+                <div class="motivation-fill" id="motivation-fill" style="width: 0%"></div>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="card">
+                <h2><i class="fas fa-plus-circle"></i> Add New Refusal</h2>
+                <div class="productivity-tip">
+                    <strong>Pro Tip:</strong> Be specific about what you're refusing. "Check social media every 5 minutes" is more powerful than just "social media."
+                </div>
+                <div class="input-container">
+                    <input 
+                        type="text" 
+                        class="task-input" 
+                        id="task-input" 
+                        placeholder="What will you absolutely refuse to do today?"
+                        maxlength="100"
+                    >
+                </div>
+                <button class="add-btn" onclick="addTask()">
+                    <i class="fas fa-ban"></i> Add to Refusal List
+                </button>
+            </div>
+
+            <div class="card">
+                <h2><i class="fas fa-list"></i> Today's Refusals</h2>
+                <div class="task-list" id="task-list">
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>No refusals yet. Start rebelling against productivity pressure!</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card quote-section">
+                <div class="quote-card card">
+                    <h2><i class="fas fa-quote-left"></i> Daily Dose of Rebellion</h2>
+                    <div class="quote-text" id="quote-text">Loading wisdom...</div>
+                    <div class="quote-author" id="quote-author">— The Universe</div>
+                    <button class="add-btn" onclick="generateQuote()" style="margin-top: 1rem;">
+                        <i class="fas fa-sync-alt"></i> New Quote
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Application State
+        let tasks = JSON.parse(localStorage.getItem('antiTodoTasks')) || [];
+        let currentQuoteIndex = 0;
+        
+        // Snarky motivational quotes
+        const quotes = [
+            {
+                text: "The art of being wise is knowing what to overlook. Today, overlook your to-do list.",
+                author: "William James (paraphrased)"
+            },
+            {
+                text: "I can't believe I got paid to refuse to do things all day. Living the dream!",
+                author: "Your Future Self"
+            },
+            {
+                text: "Productivity is not about doing more things. It's about doing the right things. Sometimes the right thing is nothing.",
+                author: "The Anti-Productivity Guru"
+            },
+            {
+                text: "I've learned that saying 'no' is a complete sentence. No explanation required.",
+                author: "The Reformed People-Pleaser"
+            },
+            {
+                text: "Busy is not a badge of honor. Rest is not a reward for work completed. It's a biological necessity.",
+                author: "Dr. Reality Check"
+            },
+            {
+                text: "The most productive thing you can do today might be to consciously do nothing productive.",
+                author: "The Paradox Master"
+            },
+            {
+                text: "I refuse to hustle myself into burnout. This rebellion is sponsored by my mental health.",
+                author: "The Wise Slacker"
+            },
+            {
+                text: "Your worth is not measured by your productivity. Take that, capitalism!",
+                author: "The Revolutionary"
+            }
+        ];
+
+        // Enhanced initialization with interactive background
+        function init() {
+            renderTasks();
+            updateStats();
+            generateQuote();
+            createInteractiveBackground();
+            
+            // Add enter key support for input
+            const input = document.getElementById('task-input');
+            input.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addTask();
+                }
+            });
+
+            // Add character counter for input
+            input.addEventListener('input', function(e) {
+                const remaining = 100 - e.target.value.length;
+                let counter = document.getElementById('char-counter');
+                
+                if (!counter) {
+                    counter = document.createElement('div');
+                    counter.id = 'char-counter';
+                    counter.style.cssText = `
+                        font-size: 0.8rem;
+                        opacity: 0.6;
+                        text-align: right;
+                        margin-top: 0.5rem;
+                        transition: all 0.3s ease;
+                    `;
+                    e.target.parentNode.appendChild(counter);
+                }
+                
+                counter.textContent = `${remaining} characters remaining`;
+                counter.style.color = remaining < 20 ? '#f39c12' : remaining < 10 ? '#e74c3c' : 'rgba(255, 255, 255, 0.6)';
+            });
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', function(e) {
+                // Alt + N to focus on input
+                if (e.altKey && e.key === 'n') {
+                    e.preventDefault();
+                    input.focus();
+                }
+                
+                // Alt + Q for new quote
+                if (e.altKey && e.key === 'q') {
+                    e.preventDefault();
+                    generateQuote();
+                }
+                
+                // Alt + T for theme toggle
+                if (e.altKey && e.key === 't') {
+                    e.preventDefault();
+                    toggleTheme();
+                }
+            });
+
+            // Add auto-save indicator
+            let saveTimeout;
+            const originalSaveTasks = saveTasks;
+            window.saveTasks = function() {
+                originalSaveTasks();
+                showSaveIndicator();
+            };
+
+            // Load saved theme preference
+            const savedTheme = localStorage.getItem('antiTodoTheme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-theme');
+                document.querySelector('.theme-toggle i').className = 'fas fa-sun';
+            }
+        }
+
+        // Create interactive background that follows mouse
+        function createInteractiveBackground() {
+            const interactiveBg = document.createElement('div');
+            interactiveBg.className = 'interactive-bg';
+            document.body.appendChild(interactiveBg);
+
+            document.addEventListener('mousemove', function(e) {
+                interactiveBg.style.left = e.clientX + 'px';
+                interactiveBg.style.top = e.clientY + 'px';
+            });
+        }
+
+        // Show save indicator
+        function showSaveIndicator() {
+            let indicator = document.getElementById('save-indicator');
+            
+            if (!indicator) {
+                indicator = document.createElement('div');
+                indicator.id = 'save-indicator';
+                indicator.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 20px;
+                    background: rgba(39, 174, 96, 0.9);
+                    color: white;
+                    padding: 0.5rem 1rem;
+                    border-radius: 20px;
+                    font-size: 0.8rem;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                    z-index: 10000;
+                    backdrop-filter: blur(10px);
+                `;
+                indicator.innerHTML = '<i class="fas fa-check"></i> Saved';
+                document.body.appendChild(indicator);
+            }
+
+            indicator.style.opacity = '1';
+            setTimeout(() => {
+                indicator.style.opacity = '0';
+            }, 2000);
+        }
+
+        // Enhanced theme toggle with persistence
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const icon = document.querySelector('.theme-toggle i');
+            const isDark = document.body.classList.contains('dark-theme');
+            
+            icon.className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            localStorage.setItem('antiTodoTheme', isDark ? 'dark' : 'light');
+            
+            showNotification(`Switched to ${isDark ? 'dark' : 'light'} theme`, 'info');
+        }
+
+        // Add new task
+        function addTask() {
+            const input = document.getElementById('task-input');
+            const taskText = input.value.trim();
+            
+            if (taskText === '') {
+                showNotification('Please enter something to refuse!', 'warning');
+                return;
+            }
+
+            const newTask = {
+                id: Date.now(),
+                text: taskText,
+                refused: false,
+                createdAt: new Date().toISOString()
+            };
+
+            tasks.unshift(newTask);
+            saveTasks();
+            input.value = '';
+            renderTasks();
+            updateStats();
+            updateMotivationMeter();
+            showNotification('Added to your refusal list! 🚫', 'success');
+        }
+
+        // Toggle task refused status
+        function toggleTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                task.refused = !task.refused;
+                saveTasks();
+                renderTasks();
+                updateStats();
+                updateMotivationMeter();
+                
+                if (task.refused) {
+                    showNotification('Great job refusing! Your rebellion grows stronger! 💪', 'success');
+                } else {
+                    showNotification('Task unmarked. The rebellion continues...', 'info');
+                }
+            }
+        }
+
+        // Delete task
+        function deleteTask(taskId) {
+            if (confirm('Remove this refusal from your list?')) {
+                tasks = tasks.filter(t => t.id !== taskId);
+                saveTasks();
+                renderTasks();
+                updateStats();
+                showNotification('Refusal removed from your list', 'info');
+            }
+        }
+
+        // Enhanced task rendering with scroll indicators
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            
+            if (tasks.length === 0) {
+                taskList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <p>No refusals yet. Start rebelling against productivity pressure!</p>
+                        <small style="opacity: 0.6; display: block; margin-top: 1rem;">
+                            💡 Try refusing things like "checking email every 5 minutes" or "saying yes to everything"
+                        </small>
+                    </div>
+                `;
+                return;
+            }
+
+            // Add scroll indicators
+            const hasScrollableContent = tasks.length > 4;
+            const scrollIndicators = hasScrollableContent ? `
+                <div class="scroll-gradient-top"></div>
+                <div class="scroll-gradient-bottom"></div>
+            ` : '';
+
+            taskList.innerHTML = scrollIndicators + tasks.map((task, index) => `
+                <div class="task-item ${task.refused ? 'refused' : ''}" 
+                     data-task-id="${task.id}"
+                     style="animation-delay: ${index * 0.1}s">
+                    <div class="task-checkbox ${task.refused ? 'checked' : ''}" 
+                         onclick="toggleTask(${task.id})" 
+                         title="${task.refused ? 'Successfully refused!' : 'Click to mark as refused'}">
+                    </div>
+                    <div class="task-text">${escapeHtml(task.text)}</div>
+                    <button class="delete-btn" onclick="deleteTask(${task.id})" title="Remove refusal">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            `).join('');
+
+            // Add scroll event listeners for gradient indicators
+            if (hasScrollableContent) {
+                const scrollContainer = taskList;
+                const topGradient = taskList.querySelector('.scroll-gradient-top');
+                const bottomGradient = taskList.querySelector('.scroll-gradient-bottom');
+
+                function updateScrollIndicators() {
+                    const { scrollTop, scrollHeight, clientHeight } = scrollContainer;
+                    const isAtTop = scrollTop === 0;
+                    const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
+
+                    topGradient.style.opacity = isAtTop ? '0' : '1';
+                    bottomGradient.style.opacity = isAtBottom ? '0' : '1';
+                }
+
+                scrollContainer.addEventListener('scroll', updateScrollIndicators);
+                updateScrollIndicators();
+            }
+        }
+
+        // Update statistics
+        function updateStats() {
+            const totalTasks = tasks.length;
+            const refusedTasks = tasks.filter(t => t.refused).length;
+            const rebellionScore = totalTasks > 0 ? Math.round((refusedTasks / totalTasks) * 100) : 0;
+
+            document.getElementById('total-tasks').textContent = totalTasks;
+            document.getElementById('refused-tasks').textContent = refusedTasks;
+            document.getElementById('rebellion-score').textContent = rebellionScore + '%';
+        }
+
+        // Update motivation meter
+        function updateMotivationMeter() {
+            const totalTasks = tasks.length;
+            const refusedTasks = tasks.filter(t => t.refused).length;
+            const percentage = totalTasks > 0 ? (refusedTasks / totalTasks) * 100 : 0;
+            
+            document.getElementById('motivation-fill').style.width = percentage + '%';
+        }
+
+        // Generate random quote
+        function generateQuote() {
+            currentQuoteIndex = Math.floor(Math.random() * quotes.length);
+            const quote = quotes[currentQuoteIndex];
+            
+            document.getElementById('quote-text').textContent = `"${quote.text}"`;
+            document.getElementById('quote-author').textContent = `— ${quote.author}`;
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            document.body.classList.toggle('dark-theme');
+            const icon = document.querySelector('.theme-toggle i');
+            icon.className = document.body.classList.contains('dark-theme') ? 
+                'fas fa-sun' : 'fas fa-moon';
+        }
+
+        // Save tasks to localStorage
+        function saveTasks() {
+            localStorage.setItem('antiTodoTasks', JSON.stringify(tasks));
+        }
+
+        // Enhanced notification system with better positioning and effects
+        function showNotification(message, type) {
+            // Remove existing notifications
+            const existingNotifications = document.querySelectorAll('.notification');
+            existingNotifications.forEach(n => n.remove());
+
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${type === 'success' ? 'linear-gradient(135deg, #27ae60, #2ecc71)' : 
+                            type === 'warning' ? 'linear-gradient(135deg, #f39c12, #e67e22)' : 
+                            'linear-gradient(135deg, #3498db, #2980b9)'};
+                color: white;
+                padding: 1.2rem 2rem;
+                border-radius: 12px;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                z-index: 10000;
+                animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                max-width: 350px;
+                font-weight: 500;
+                backdrop-filter: blur(15px);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 0.8rem;">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : 
+                                    type === 'warning' ? 'exclamation-triangle' : 
+                                    'info-circle'}" 
+                       style="font-size: 1.2rem;"></i>
+                    <span>${message}</span>
+                    <button onclick="this.parentElement.parentElement.remove()" 
+                            style="background: none; border: none; color: white; cursor: pointer; 
+                                   padding: 0.2rem; border-radius: 50%; margin-left: auto;
+                                   opacity: 0.7; transition: opacity 0.3s ease;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 4 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.style.animation = 'slideOutRight 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 400);
+                }
+            }, 4000);
+        }
+
+
+        // Toggle task refused status
+        function toggleTask(taskId) {
+            const task = tasks.find(t => t.id === taskId);
+            if (task) {
+                const taskElement = document.querySelector(`[data-task-id="${taskId}"]`);
+                taskElement.classList.add('completing');
+                
+                setTimeout(() => {
+                    task.refused = !task.refused;
+                    saveTasks();
+                    renderTasks();
+                    updateStats();
+                    updateMotivationMeter();
+                    
+                    if (task.refused) {
+                        showNotification('Great job refusing! Your rebellion grows stronger! 💪', 'success');
+                        // Add celebration effect
+                        document.querySelector('.stats-bar').classList.add('celebrate');
+                        setTimeout(() => {
+                            document.querySelector('.stats-bar').classList.remove('celebrate');
+                        }, 600);
+                    } else {
+                        showNotification('Task unmarked. The rebellion continues...', 'info');
+                    }
+                }, 300);
+            }
+        }
+
+        // Enhanced add task with validation and UX improvements
+        function addTask() {
+            const input = document.getElementById('task-input');
+            const taskText = input.value.trim();
+            const addBtn = document.querySelector('.add-btn');
+            
+            if (taskText === '') {
+                input.classList.add('error-shake');
+                showNotification('Please enter something to refuse!', 'warning');
+                setTimeout(() => input.classList.remove('error-shake'), 500);
+                return;
+            }
+
+            if (taskText.length < 3) {
+                input.classList.add('error-shake');
+                showNotification('Please be more specific (at least 3 characters)', 'warning');
+                setTimeout(() => input.classList.remove('error-shake'), 500);
+                return;
+            }
+
+            // Check for duplicates
+            const isDuplicate = tasks.some(task => 
+                task.text.toLowerCase() === taskText.toLowerCase()
+            );
+            
+            if (isDuplicate) {
+                input.classList.add('error-shake');
+                showNotification('This refusal already exists!', 'warning');
+                setTimeout(() => input.classList.remove('error-shake'), 500);
+                return;
+            }
+
+            // Add loading state
+            addBtn.classList.add('loading');
+            addBtn.disabled = true;
+            
+            setTimeout(() => {
+                const newTask = {
+                    id: Date.now(),
+                    text: taskText,
+                    refused: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                tasks.unshift(newTask);
+                saveTasks();
+                input.value = '';
+                renderTasks();
+                updateStats();
+                updateMotivationMeter();
+                
+                addBtn.classList.remove('loading');
+                addBtn.disabled = false;
+                
+                showNotification('Added to your refusal list! 🚫', 'success');
+                
+                // Add pulse animation to new task
+                setTimeout(() => {
+                    const newTaskElement = document.querySelector(`[data-task-id="${newTask.id}"]`);
+                    if (newTaskElement) {
+                        newTaskElement.classList.add('pulse-animation');
+                        setTimeout(() => {
+                            newTaskElement.classList.remove('pulse-animation');
+                        }, 2000);
+                    }
+                }, 100);
+            }, 500);
+        }
+        // Add comprehensive keyboard shortcuts help
+        function showKeyboardShortcuts() {
+            const shortcuts = [
+                { key: 'Alt + N', action: 'Focus on input field' },
+                { key: 'Alt + Q', action: 'Generate new quote' },
+                { key: 'Alt + T', action: 'Toggle theme' },
+                { key: 'Enter', action: 'Add new refusal (when input focused)' },
+                { key: 'Escape', action: 'Clear input field' }
+            ];
+
+            const shortcutsHtml = shortcuts.map(s => 
+                `<div style="display: flex; justify-content: space-between; margin: 0.5rem 0;">
+                    <kbd style="background: rgba(255,255,255,0.1); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${s.key}</kbd>
+                    <span style="opacity: 0.8;">${s.action}</span>
+                </div>`
+            ).join('');
+
+            showNotification(`
+                <div style="max-width: 300px;">
+                    <strong style="display: block; margin-bottom: 1rem;">⌨️ Keyboard Shortcuts</strong>
+                    ${shortcutsHtml}
+                </div>
+            `, 'info');
+        }
+
+        // Enhanced stats with animations and better UX
+        function updateStats() {
+            const totalTasks = tasks.length;
+            const refusedTasks = tasks.filter(t => t.refused).length;
+            const rebellionScore = totalTasks > 0 ? Math.round((refusedTasks / totalTasks) * 100) : 0;
+
+            // Animate number changes
+            animateNumber('total-tasks', totalTasks);
+            animateNumber('refused-tasks', refusedTasks);
+            animateNumber('rebellion-score', rebellionScore, '%');
+
+            // Update achievement badges
+            updateAchievements(totalTasks, refusedTasks, rebellionScore);
+        }
+
+        // Animate number changes
+        function animateNumber(elementId, targetValue, suffix = '') {
+            const element = document.getElementById(elementId);
+            const currentValue = parseInt(element.textContent) || 0;
+            const increment = targetValue > currentValue ? 1 : -1;
+            const duration = 300;
+            const steps = Math.abs(targetValue - currentValue);
+            const stepDuration = steps > 0 ? duration / steps : 0;
+
+            if (steps === 0) return;
+
+            let current = currentValue;
+            const timer = setInterval(() => {
+                current += increment;
+                element.textContent = current + suffix;
+                
+                if (current === targetValue) {
+                    clearInterval(timer);
+                    // Add a subtle bounce effect
+                    element.style.transform = 'scale(1.1)';
+                    setTimeout(() => {
+                        element.style.transform = 'scale(1)';
+                    }, 200);
+                }
+            }, stepDuration);
+        }
+
+        // Achievement system
+        function updateAchievements(total, refused, score) {
+            const achievements = [];
+            
+            if (total >= 1) achievements.push('🌱 First Refusal');
+            if (total >= 5) achievements.push('🚀 Getting Started');
+            if (total >= 10) achievements.push('💪 Rebellion Rising');
+            if (refused >= 5) achievements.push('🎯 Focused Refuser');
+            if (score >= 50) achievements.push('⭐ Half Way There');
+            if (score >= 80) achievements.push('🏆 Master Refuser');
+            if (score === 100) achievements.push('👑 Perfect Rebellion');
+
+            // Show new achievements
+            const lastAchievements = JSON.parse(localStorage.getItem('antiTodoAchievements')) || [];
+            const newAchievements = achievements.filter(a => !lastAchievements.includes(a));
+            
+            if (newAchievements.length > 0) {
+                newAchievements.forEach(achievement => {
+                    setTimeout(() => {
+                        showNotification(`Achievement Unlocked: ${achievement}`, 'success');
+                    }, Math.random() * 1000);
+                });
+                localStorage.setItem('antiTodoAchievements', JSON.stringify(achievements));
+            }
+        }
+
+        // Utility function to escape HTML
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, function(m) { return map[m]; });
+        }
+
+        // Add some CSS animations for notifications
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOutRight {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Initialize the application
+        init();
+    </script>
+</body>
+</html>
