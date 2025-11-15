@@ -1,0 +1,1939 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-To-Do List - Productivity Reimagined</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #667eea;
+            --primary-light: #818cf8;
+            --primary-dark: #4f46e5;
+            --secondary-color: #764ba2;
+            --accent-color: #f093fb;
+            --accent-light: #fbbf24;
+            --success-color: #10b981;
+            --success-light: #34d399;
+            --warning-color: #f59e0b;
+            --warning-light: #fbbf24;
+            --danger-color: #ef4444;
+            --danger-light: #f87171;
+            --info-color: #3b82f6;
+            --info-light: #60a5fa;
+            --dark-bg: #0f0f23;
+            --darker-bg: #1a1a2e;
+            --darkest-bg: #16213e;
+            --light-bg: #ffffff;
+            --light-surface: #f8fafc;
+            --text-primary: #1a202c;
+            --text-secondary: #4a5568;
+            --text-tertiary: #718096;
+            --text-light: #ffffff;
+            --text-muted: #a0aec0;
+            --border-color: #e2e8f0;
+            --border-light: #f7fafc;
+            --surface-glass: rgba(255, 255, 255, 0.1);
+            --surface-glass-dark: rgba(0, 0, 0, 0.1);
+            --shadow-xs: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-sm: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+            --shadow-light: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            --shadow-medium: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --shadow-heavy: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            --shadow-glow: 0 0 20px rgba(102, 126, 234, 0.3);
+            --border-radius-xs: 4px;
+            --border-radius-sm: 8px;
+            --border-radius: 12px;
+            --border-radius-lg: 16px;
+            --border-radius-xl: 20px;
+            --transition-fast: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-slow: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-bounce: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 50%, var(--accent-color) 100%);
+            background-attachment: fixed;
+            min-height: 100vh;
+            padding: 2rem 1rem;
+            transition: var(--transition-slow);
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.2) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(118, 75, 162, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 50%, var(--darkest-bg) 100%);
+        }
+
+        body.dark-mode::before {
+            background: 
+                radial-gradient(circle at 20% 50%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(240, 147, 251, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 80%, rgba(118, 75, 162, 0.1) 0%, transparent 50%);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+            position: relative;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-color), var(--primary-light));
+            border-radius: 2px;
+            opacity: 0.7;
+        }
+
+        .header h1 {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 800;
+            color: var(--light-bg);
+            margin-bottom: 0.5rem;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            letter-spacing: -0.02em;
+            position: relative;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .header h1:hover {
+            transform: scale(1.02);
+            text-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .header h1 i {
+            margin-right: 0.5rem;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .header p {
+            font-size: 1.25rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-bottom: 2rem;
+            font-weight: 400;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .btn {
+            background: var(--surface-glass);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: var(--border-radius);
+            padding: 0.875rem 1.75rem;
+            color: var(--light-bg);
+            cursor: pointer;
+            transition: var(--transition);
+            backdrop-filter: blur(20px);
+            font-weight: 600;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            min-width: 120px;
+            justify-content: center;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: var(--transition);
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium), var(--shadow-glow);
+            border-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-light));
+            border-color: var(--primary-light);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, var(--success-color), var(--success-light));
+            border-color: var(--success-light);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, var(--danger-color), var(--danger-light));
+            border-color: var(--danger-light);
+        }
+
+        .btn-info {
+            background: linear-gradient(135deg, var(--info-color), var(--info-light));
+            border-color: var(--info-light);
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
+        }
+
+        .card {
+            background: var(--light-bg);
+            border-radius: var(--border-radius-lg);
+            padding: 2.5rem;
+            box-shadow: var(--shadow-heavy);
+            transition: var(--transition-slow);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--secondary-color));
+        }
+
+        .dark-mode .card {
+            background: rgba(26, 26, 46, 0.85);
+            color: var(--light-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: var(--shadow-heavy), 0 0 40px rgba(102, 126, 234, 0.1);
+        }
+
+        .card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 40px 80px -12px rgba(0, 0, 0, 0.4), var(--shadow-glow);
+        }
+
+        .card-interactive {
+            cursor: pointer;
+        }
+
+        .card-glow {
+            position: relative;
+        }
+
+        .card-glow::after {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, var(--primary-color), var(--accent-color), var(--secondary-color));
+            border-radius: var(--border-radius-lg);
+            z-index: -1;
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .card-glow:hover::after {
+            opacity: 0.7;
+            animation: rotate 3s linear infinite;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .dark-mode .card-header {
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dark-mode .card-title {
+            color: var(--light-bg);
+        }
+
+        .input-section {
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 1.25rem 1.5rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: var(--light-bg);
+            font-family: inherit;
+            position: relative;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1), var(--shadow-light);
+            transform: translateY(-1px);
+        }
+
+        .dark-mode .task-input {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.15);
+            color: var(--light-bg);
+        }
+
+        .dark-mode .task-input:focus {
+            background: rgba(255, 255, 255, 0.12);
+            border-color: var(--primary-light);
+        }
+
+        .task-input::placeholder {
+            color: var(--text-tertiary);
+            font-style: italic;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper::after {
+            content: attr(data-length);
+            position: absolute;
+            bottom: -1.5rem;
+            right: 0;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            transition: var(--transition-fast);
+        }
+
+        .input-wrapper.warning::after {
+            color: var(--warning-color);
+        }
+
+        .input-wrapper.danger::after {
+            color: var(--danger-color);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: var(--light-bg);
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-medium);
+        }
+
+        .category-select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: var(--border-radius);
+            background: var(--light-bg);
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .dark-mode .category-select {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--light-bg);
+        }
+
+        .tasks-list {
+            max-height: 500px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: var(--primary-color) transparent;
+        }
+
+        .tasks-list::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .tasks-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .tasks-list::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 3px;
+        }
+
+        .task-item {
+            background: linear-gradient(135deg, #ffffff, #f8fafc);
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 1.25rem;
+            transition: var(--transition);
+            border-left: 4px solid var(--primary-color);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            border: 1px solid var(--border-light);
+        }
+
+        .task-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent, rgba(102, 126, 234, 0.03));
+            opacity: 0;
+            transition: var(--transition);
+        }
+
+        .task-item:hover::before {
+            opacity: 1;
+        }
+
+        .dark-mode .task-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.12));
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .task-item.refused {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border-left-color: var(--danger-color);
+            opacity: 0.9;
+            position: relative;
+        }
+
+        .task-item.refused::after {
+            content: '✓ AVOIDED';
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: var(--danger-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: var(--border-radius-xl);
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            opacity: 0.8;
+        }
+
+        .dark-mode .task-item.refused {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.25));
+        }
+
+        .task-item:hover {
+            transform: translateX(8px) translateY(-2px);
+            box-shadow: var(--shadow-medium);
+            border-left-width: 6px;
+        }
+
+        .task-item.priority-high {
+            border-left-color: var(--danger-color);
+            background: linear-gradient(135deg, #fef2f2, #fef7f7);
+        }
+
+        .task-item.priority-medium {
+            border-left-color: var(--warning-color);
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+        }
+
+        .task-item.priority-low {
+            border-left-color: var(--success-color);
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+        }
+
+        .task-item.dragging {
+            opacity: 0.5;
+            transform: rotate(5deg) scale(1.05);
+            z-index: 1000;
+            box-shadow: var(--shadow-heavy);
+        }
+
+        .task-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.75rem;
+        }
+
+        .task-text {
+            font-weight: 600;
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        .dark-mode .task-text {
+            color: var(--light-bg);
+        }
+
+        .task-item.refused .task-text {
+            text-decoration: line-through;
+            color: var(--danger-color);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .task-btn {
+            background: none;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: var(--transition-bounce);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            width: 40px;
+            height: 40px;
+        }
+
+        .task-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: 0;
+            transform: scale(0);
+            transition: var(--transition-bounce);
+        }
+
+        .task-btn:hover::before {
+            opacity: 0.1;
+            transform: scale(1);
+        }
+
+        .refuse-btn {
+            color: var(--danger-color);
+        }
+
+        .refuse-btn:hover {
+            color: var(--danger-light);
+            transform: scale(1.1) rotate(10deg);
+        }
+
+        .refuse-btn:active {
+            transform: scale(0.9);
+        }
+
+        .delete-btn {
+            color: var(--text-secondary);
+        }
+
+        .delete-btn:hover {
+            color: var(--danger-color);
+            transform: scale(1.1);
+        }
+
+        .undo-btn {
+            color: var(--info-color);
+        }
+
+        .undo-btn:hover {
+            color: var(--info-light);
+            transform: scale(1.1) rotate(-10deg);
+        }
+
+        .priority-btn {
+            color: var(--warning-color);
+        }
+
+        .priority-btn:hover {
+            color: var(--accent-light);
+            transform: scale(1.1);
+        }
+
+        .task-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .category-badge {
+            background: var(--primary-color);
+            color: var(--light-bg);
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .quote-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-radius: var(--border-radius);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--accent-color);
+        }
+
+        .quote-text {
+            font-style: italic;
+            font-size: 1.1rem;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .dark-mode .quote-text {
+            color: var(--light-bg);
+        }
+
+        .quote-author {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-align: right;
+        }
+
+        .stats-panel {
+            display: none;
+            background: var(--light-bg);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            margin-top: 2rem;
+            box-shadow: var(--shadow-heavy);
+            grid-column: 1 / -1;
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        .dark-mode .stats-panel {
+            background: rgba(26, 26, 46, 0.9);
+            color: var(--light-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .stat-item {
+            text-align: center;
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            border-radius: var(--border-radius);
+            transition: var(--transition);
+        }
+
+        .dark-mode .stat-item {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.1));
+        }
+
+        .stat-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--primary-color);
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+        }
+
+        .dark-mode .stat-label {
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.5;
+        }
+
+        .productivity-meter {
+            background: linear-gradient(90deg, var(--success-color), var(--warning-color), var(--danger-color));
+            height: 8px;
+            border-radius: 4px;
+            margin: 1rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .productivity-indicator {
+            position: absolute;
+            top: -2px;
+            width: 4px;
+            height: 12px;
+            background: var(--light-bg);
+            border-radius: 2px;
+            transition: var(--transition);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes rotate {
+            from {
+                transform: rotate(0deg);
+            }
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% {
+                transform: translate3d(0, 0, 0);
+            }
+            40%, 43% {
+                transform: translate3d(0, -30px, 0);
+            }
+            70% {
+                transform: translate3d(0, -15px, 0);
+            }
+            90% {
+                transform: translate3d(0, -4px, 0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+
+        @keyframes glow {
+            0%, 100% {
+                box-shadow: 0 0 20px rgba(102, 126, 234, 0.3);
+            }
+            50% {
+                box-shadow: 0 0 40px rgba(102, 126, 234, 0.6);
+            }
+        }
+
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            background-size: 200% 100%;
+            animation: shimmer 2s infinite;
+        }
+
+        .success-feedback {
+            animation: bounce 0.8s ease-out;
+        }
+
+        .error-feedback {
+            animation: pulse 0.5s ease-out;
+            border-color: var(--danger-color) !important;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-heavy);
+            z-index: 1000;
+            animation: slideInRight 0.5s ease-out;
+            max-width: 350px;
+            font-weight: 600;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .notification.success {
+            background: linear-gradient(135deg, var(--success-color), var(--success-light));
+        }
+
+        .notification.warning {
+            background: linear-gradient(135deg, var(--warning-color), var(--warning-light));
+        }
+
+        .notification.error {
+            background: linear-gradient(135deg, var(--danger-color), var(--danger-light));
+        }
+
+        .notification.info {
+            background: linear-gradient(135deg, var(--info-color), var(--info-light));
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--darkest-bg);
+            color: var(--light-bg);
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--border-radius-sm);
+            font-size: 0.875rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+            z-index: 1000;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--darkest-bg);
+            opacity: 0;
+            visibility: hidden;
+            transition: var(--transition);
+        }
+
+        .tooltip:hover::before,
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: var(--border-radius-sm);
+        }
+
+        .dark-mode .skeleton {
+            background: linear-gradient(90deg, #2a2a2a 25%, #3a3a3a 50%, #2a2a2a 75%);
+            background-size: 200% 100%;
+        }
+
+        .glass-morphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .dark-mode .glass-morphism {
+            background: rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .floating-action {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-heavy);
+            cursor: pointer;
+            transition: var(--transition);
+            z-index: 999;
+            border: none;
+        }
+
+        .floating-action:hover {
+            transform: scale(1.1);
+            box-shadow: var(--shadow-heavy), var(--shadow-glow);
+        }
+
+        .progress-ring {
+            width: 60px;
+            height: 60px;
+            position: relative;
+        }
+
+        .progress-ring svg {
+            transform: rotate(-90deg);
+            width: 100%;
+            height: 100%;
+        }
+
+        .progress-ring circle {
+            fill: transparent;
+            stroke: var(--primary-color);
+            stroke-width: 4;
+            stroke-dasharray: 188.5;
+            stroke-dashoffset: 188.5;
+            transition: stroke-dashoffset 0.5s ease-in-out;
+        }
+
+        .ripple {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .ripple:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .card {
+                padding: 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 1rem 0.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .header p {
+                font-size: 1.1rem;
+                padding: 0 1rem;
+            }
+            
+            .controls {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 0.75rem;
+            }
+            
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+            
+            .input-group {
+                flex-direction: column;
+                gap: 1rem;
+            }
+            
+            .add-btn {
+                width: 100%;
+                justify-content: center;
+                padding: 1.25rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1rem;
+            }
+            
+            .card {
+                padding: 1.5rem;
+                margin: 0 0.5rem;
+            }
+            
+            .task-item {
+                padding: 1.25rem;
+            }
+            
+            .task-item:hover {
+                transform: translateY(-2px);
+            }
+            
+            .floating-action {
+                bottom: 1rem;
+                right: 1rem;
+                width: 50px;
+                height: 50px;
+                font-size: 1.25rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .filter-tabs {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+            
+            .filter-tab {
+                padding: 1rem;
+            }
+            
+            .task-content {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 1rem;
+            }
+            
+            .task-actions {
+                align-self: flex-end;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body:not(.light-mode) {
+                background: linear-gradient(135deg, var(--dark-bg) 0%, var(--darker-bg) 50%, var(--darkest-bg) 100%);
+            }
+        }
+
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .card {
+                border: 2px solid;
+            }
+            
+            .btn {
+                border-width: 2px;
+                font-weight: 700;
+            }
+            
+            .task-item {
+                border-width: 2px;
+                border-left-width: 6px;
+            }
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white !important;
+                color: black !important;
+            }
+            
+            .controls,
+            .floating-action,
+            .task-actions {
+                display: none !important;
+            }
+            
+            .card {
+                box-shadow: none !important;
+                border: 1px solid #ccc !important;
+                break-inside: avoid;
+            }
+            
+            .task-item {
+                break-inside: avoid;
+                margin-bottom: 0.5rem;
+            }
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.25rem;
+            margin-bottom: 1.5rem;
+            background: var(--surface-glass-dark);
+            padding: 0.5rem;
+            border-radius: var(--border-radius-lg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-color);
+        }
+
+        .dark-mode .filter-tabs {
+            background: var(--surface-glass);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .filter-tab {
+            flex: 1;
+            padding: 0.875rem 1rem;
+            text-align: center;
+            border: none;
+            background: transparent;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 600;
+            color: var(--text-secondary);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-tab::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+
+        .filter-tab:hover {
+            color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.05);
+        }
+
+        .filter-tab.active {
+            background: var(--light-bg);
+            color: var(--primary-color);
+            box-shadow: var(--shadow-sm);
+            transform: translateY(-1px);
+        }
+
+        .filter-tab.active::before {
+            transform: scaleX(1);
+        }
+
+        .dark-mode .filter-tab.active {
+            background: rgba(255, 255, 255, 0.12);
+            color: var(--primary-light);
+        }
+        
+        .dark-mode .filter-tab.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light-bg);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1><i class="fas fa-ban"></i> Anti-To-Do List</h1>
+            <p>Productivity reimagined. Check off what you refuse to do today.</p>
+            <div class="controls">
+                <button class="btn theme-toggle" onclick="toggleTheme()">
+                    <i class="fas fa-moon"></i> Dark Mode
+                </button>
+                <button class="btn btn-info stats-toggle" onclick="toggleStats()">
+                    <i class="fas fa-chart-bar"></i> Statistics
+                </button>
+                <button class="btn btn-success export-btn" onclick="exportData()">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-danger clear-btn" onclick="clearAll()">
+                    <i class="fas fa-trash"></i> Clear All
+                </button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="card card-glow">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-plus-circle"></i>
+                        Add Anti-Task
+                    </h2>
+                </div>
+                
+                <div class="quote-section glass-morphism">
+                    <div class="quote-text" id="daily-quote"></div>
+                    <div class="quote-author" id="quote-author"></div>
+                </div>
+
+                <div class="input-section">
+                    <div class="input-group">
+                        <div class="input-wrapper">
+                            <input 
+                                type="text" 
+                                class="task-input ripple" 
+                                id="task-input"
+                                placeholder="What are you refusing to do today?"
+                                maxlength="200"
+                            >
+                        </div>
+                        <button class="add-btn btn-primary ripple" onclick="addTask()">
+                            <i class="fas fa-ban"></i>
+                            Refuse
+                        </button>
+                    </div>
+                    <select class="category-select" id="category-select">
+                        <option value="general">📋 General Avoidance</option>
+                        <option value="work">💼 Work Procrastination</option>
+                        <option value="social">👥 Social Dodging</option>
+                        <option value="health">💪 Health Neglect</option>
+                        <option value="personal">🏠 Personal Tasks</option>
+                        <option value="learning">📚 Learning Avoidance</option>
+                        <option value="creative">🎨 Creative Blocks</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="card card-interactive">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-list-ul"></i>
+                        Things I'm Avoiding
+                        <span class="category-badge" id="task-counter">0 tasks</span>
+                    </h2>
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="filter-tab active ripple" data-filter="all">All</button>
+                    <button class="filter-tab ripple" data-filter="active">Active</button>
+                    <button class="filter-tab ripple" data-filter="refused">Refused</button>
+                </div>
+
+                <div class="tasks-list" id="tasks-list">
+                    <div class="empty-state">
+                        <i class="fas fa-smile-beam"></i>
+                        <h3>No anti-tasks yet!</h3>
+                        <p>Add something you're avoiding to get started.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-panel glass-morphism" id="stats-panel">
+            <div class="card-header">
+                <h2 class="card-title">
+                    <i class="fas fa-analytics"></i>
+                    Avoidance Analytics
+                </h2>
+            </div>
+            <div class="stats-grid">
+                <div class="stat-item glass-morphism">
+                    <span class="stat-number" id="total-tasks">0</span>
+                    <div class="stat-label">Total Anti-Tasks</div>
+                </div>
+                <div class="stat-item glass-morphism">
+                    <span class="stat-number" id="refused-tasks">0</span>
+                    <div class="stat-label">Successfully Avoided</div>
+                </div>
+                <div class="stat-item glass-morphism">
+                    <span class="stat-number" id="avoidance-rate">0%</span>
+                    <div class="stat-label">Avoidance Rate</div>
+                </div>
+                <div class="stat-item glass-morphism">
+                    <span class="stat-number" id="most-avoided">N/A</span>
+                    <div class="stat-label">Top Category</div>
+                </div>
+            </div>
+            <div class="productivity-meter">
+                <div class="productivity-indicator" id="productivity-indicator"></div>
+            </div>
+            <p style="text-align: center; margin-top: 1rem; color: var(--text-secondary);">
+                Productivity Avoidance Meter: The higher, the better at avoiding!
+            </p>
+        </div>
+
+        <!-- Floating Action Button -->
+        <button class="floating-action ripple tooltip" data-tooltip="Quick Add Task" onclick="document.getElementById('task-input').focus()">
+            <i class="fas fa-plus"></i>
+        </button>
+    </div>
+
+    <script>
+        // Data storage
+        let tasks = JSON.parse(localStorage.getItem('antiTodoTasks') || '[]');
+        let currentFilter = 'all';
+
+        // Snarky quotes
+        const quotes = [
+            { text: "The expert in anything was once a beginner who refused to give up... unlike you today.", author: "Anonymous Productivity Guru" },
+            { text: "Procrastination is the art of keeping up with yesterday.", author: "Don Marquis" },
+            { text: "I love deadlines. I like the whooshing sound they make as they fly by.", author: "Douglas Adams" },
+            { text: "The way to get started is to quit talking and begin doing. But not today, apparently.", author: "Walt Disney (modified)" },
+            { text: "You may delay, but time will not. Time doesn't care about your anti-to-do list.", author: "Benjamin Franklin (paraphrased)" },
+            { text: "Someday is not a day of the week. Neither is 'eventually' or 'when I feel like it'.", author: "Janet Dailey (adapted)" },
+            { text: "The best time to plant a tree was 20 years ago. The second best time is now. The worst time is never.", author: "Chinese Proverb (extended)" },
+            { text: "A year from now you may wish you had started today. But today you're wishing you started yesterday.", author: "Karen Lamb (twisted)" }
+        ];
+
+        // Category icons and colors
+        const categoryData = {
+            general: { icon: '📋', color: '#667eea' },
+            work: { icon: '💼', color: '#f093fb' },
+            social: { icon: '👥', color: '#764ba2' },
+            health: { icon: '💪', color: '#10b981' },
+            personal: { icon: '🏠', color: '#f59e0b' },
+            learning: { icon: '📚', color: '#ef4444' },
+            creative: { icon: '🎨', color: '#8b5cf6' }
+        };
+
+        // Initialize app
+        document.addEventListener('DOMContentLoaded', function() {
+            displayRandomQuote();
+            renderTasks();
+            updateStats();
+            setupEventListeners();
+            
+            // Load theme preference
+            if (localStorage.getItem('darkMode') === 'true') {
+                document.body.classList.add('dark-mode');
+                document.querySelector('.theme-toggle').innerHTML = '<i class="fas fa-sun"></i> Light Mode';
+            }
+        });
+
+        function setupEventListeners() {
+            // Enter key to add task
+            document.getElementById('task-input').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') addTask();
+            });
+            
+            // Filter tabs
+            document.querySelectorAll('.filter-tab').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentFilter = this.dataset.filter;
+                    renderTasks();
+                });
+            });
+        }
+
+        function displayRandomQuote() {
+            const quote = quotes[Math.floor(Math.random() * quotes.length)];
+            document.getElementById('daily-quote').textContent = `"${quote.text}"`;
+            document.getElementById('quote-author').textContent = `— ${quote.author}`;
+        }
+
+        function addTask() {
+            const input = document.getElementById('task-input');
+            const categorySelect = document.getElementById('category-select');
+            const taskText = input.value.trim();
+            
+            if (!taskText) {
+                input.focus();
+                input.style.borderColor = '#ef4444';
+                setTimeout(() => input.style.borderColor = '', 2000);
+                return;
+            }
+
+            const task = {
+                id: Date.now(),
+                text: taskText,
+                category: categorySelect.value,
+                refused: false,
+                createdAt: new Date().toISOString(),
+                refusedAt: null
+            };
+
+            tasks.unshift(task);
+            saveTasks();
+            input.value = '';
+            renderTasks();
+            updateStats();
+            
+            // Add success feedback
+            input.style.borderColor = '#10b981';
+            setTimeout(() => input.style.borderColor = '', 1000);
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.refused = !task.refused;
+                task.refusedAt = task.refused ? new Date().toISOString() : null;
+                saveTasks();
+                renderTasks();
+                updateStats();
+            }
+        }
+
+        function deleteTask(id) {
+            if (confirm('Are you sure you want to delete this anti-task?')) {
+                tasks = tasks.filter(t => t.id !== id);
+                saveTasks();
+                renderTasks();
+                updateStats();
+            }
+        }
+
+        function renderTasks() {
+            const tasksList = document.getElementById('tasks-list');
+            const filteredTasks = tasks.filter(task => {
+                if (currentFilter === 'active') return !task.refused;
+                if (currentFilter === 'refused') return task.refused;
+                return true;
+            });
+
+            if (filteredTasks.length === 0) {
+                const emptyMessage = currentFilter === 'refused' ? 
+                    'No tasks refused yet! Start avoiding responsibly.' :
+                    currentFilter === 'active' ? 
+                    'No active anti-tasks. Add some procrastination goals!' :
+                    'No anti-tasks yet! Add something you\'re avoiding to get started.';
+                    
+                tasksList.innerHTML = `
+                    <div class="empty-state">
+                        <i class="fas fa-smile-beam"></i>
+                        <h3>${emptyMessage}</h3>
+                    </div>
+                `;
+                return;
+            }
+
+            tasksList.innerHTML = filteredTasks.map(task => {
+                const category = categoryData[task.category];
+                const createdDate = new Date(task.createdAt).toLocaleDateString();
+                const refusedDate = task.refusedAt ? new Date(task.refusedAt).toLocaleDateString() : null;
+                
+                return `
+                    <div class="task-item ${task.refused ? 'refused' : ''} new-task" data-category="${task.category}">
+                        <div class="task-content">
+                            <span class="task-text">${task.text}</span>
+                            <div class="task-actions">
+                                <button class="task-btn refuse-btn" onclick="toggleTask(${task.id})" 
+                                        title="${task.refused ? 'Mark as not refused' : 'Mark as refused'}">
+                                    <i class="fas ${task.refused ? 'fa-undo' : 'fa-ban'}"></i>
+                                </button>
+                                <button class="task-btn delete-btn" onclick="deleteTask(${task.id})" title="Delete task">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="task-meta">
+                            <span class="category-badge" style="background: ${category.color}">
+                                ${category.icon} ${task.category}
+                            </span>
+                            <span><i class="fas fa-calendar"></i> Added: ${createdDate}</span>
+                            ${refusedDate ? `<span><i class="fas fa-ban"></i> Refused: ${refusedDate}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Remove animation class after animation completes
+            setTimeout(() => {
+                document.querySelectorAll('.new-task').forEach(task => {
+                    task.classList.remove('new-task');
+                });
+            }, 500);
+
+            updateTaskCounter();
+        }
+
+        function updateTaskCounter() {
+            const counter = document.getElementById('task-counter');
+            const filteredCount = tasks.filter(task => {
+                if (currentFilter === 'active') return !task.refused;
+                if (currentFilter === 'refused') return task.refused;
+                return true;
+            }).length;
+            counter.textContent = `${filteredCount} task${filteredCount !== 1 ? 's' : ''}`;
+        }
+
+        function updateStats() {
+            const totalTasks = tasks.length;
+            const refusedTasks = tasks.filter(t => t.refused).length;
+            const avoidanceRate = totalTasks > 0 ? Math.round((refusedTasks / totalTasks) * 100) : 0;
+            
+            // Calculate most avoided category
+            const categoryStats = {};
+            tasks.filter(t => t.refused).forEach(task => {
+                categoryStats[task.category] = (categoryStats[task.category] || 0) + 1;
+            });
+            
+            const mostAvoided = Object.keys(categoryStats).reduce((a, b) => 
+                categoryStats[a] > categoryStats[b] ? a : b, 'N/A'
+            );
+            
+            document.getElementById('total-tasks').textContent = totalTasks;
+            document.getElementById('refused-tasks').textContent = refusedTasks;
+            document.getElementById('avoidance-rate').textContent = `${avoidanceRate}%`;
+            document.getElementById('most-avoided').textContent = mostAvoided !== 'N/A' ? 
+                `${categoryData[mostAvoided]?.icon || ''} ${mostAvoided}` : 'N/A';
+            
+            // Update productivity meter
+            const indicator = document.getElementById('productivity-indicator');
+            if (indicator) {
+                const position = Math.min(avoidanceRate, 100);
+                indicator.style.left = `${position}%`;
+            }
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeBtn = document.querySelector('.theme-toggle');
+            
+            body.classList.toggle('dark-mode');
+            const isDark = body.classList.contains('dark-mode');
+            
+            themeBtn.innerHTML = isDark ? 
+                '<i class="fas fa-sun"></i> Light Mode' : 
+                '<i class="fas fa-moon"></i> Dark Mode';
+            
+            localStorage.setItem('darkMode', isDark);
+        }
+
+        function toggleStats() {
+            const statsPanel = document.getElementById('stats-panel');
+            const isVisible = statsPanel.style.display === 'block';
+            
+            statsPanel.style.display = isVisible ? 'none' : 'block';
+            
+            if (!isVisible) {
+                updateStats();
+            }
+        }
+
+        function exportData() {
+            const exportData = {
+                tasks: tasks,
+                exportDate: new Date().toISOString(),
+                totalTasks: tasks.length,
+                refusedTasks: tasks.filter(t => t.refused).length,
+                categories: Object.keys(categoryData)
+            };
+            
+            const dataStr = JSON.stringify(exportData, null, 2);
+            const dataBlob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(dataBlob);
+            
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `anti-todo-list-${new Date().toISOString().split('T')[0]}.json`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            
+            // Show success message
+            const exportBtn = document.querySelector('.export-btn');
+            const originalText = exportBtn.innerHTML;
+            exportBtn.innerHTML = '<i class="fas fa-check"></i> Exported!';
+            exportBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+            
+            setTimeout(() => {
+                exportBtn.innerHTML = originalText;
+                exportBtn.style.background = '';
+            }, 2000);
+        }
+
+        function clearAll() {
+            if (tasks.length === 0) {
+                alert('No tasks to clear!');
+                return;
+            }
+            
+            const confirmMessage = `Are you sure you want to delete all ${tasks.length} anti-tasks? This action cannot be undone.`;
+            
+            if (confirm(confirmMessage)) {
+                tasks = [];
+                saveTasks();
+                renderTasks();
+                updateStats();
+                
+                // Show success feedback
+                const clearBtn = document.querySelector('.clear-btn');
+                const originalText = clearBtn.innerHTML;
+                clearBtn.innerHTML = '<i class="fas fa-check"></i> Cleared!';
+                clearBtn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                
+                setTimeout(() => {
+                    clearBtn.innerHTML = originalText;
+                    clearBtn.style.background = '';
+                }, 2000);
+            }
+        }
+
+        function saveTasks() {
+            localStorage.setItem('antiTodoTasks', JSON.stringify(tasks));
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + K to focus on input
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                document.getElementById('task-input').focus();
+            }
+            
+            // Ctrl/Cmd + Shift + S to toggle stats
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'S') {
+                e.preventDefault();
+                toggleStats();
+            }
+            
+            // Ctrl/Cmd + Shift + T to toggle theme
+            if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+                e.preventDefault();
+                toggleTheme();
+            }
+        });
+
+        // Auto-save and periodic quote refresh
+        setInterval(() => {
+            if (Math.random() < 0.1) { // 10% chance every interval
+                displayRandomQuote();
+            }
+        }, 30000); // Every 30 seconds
+
+        // Add some Easter eggs
+        let clickCount = 0;
+        document.querySelector('.header h1').addEventListener('click', function() {
+            clickCount++;
+            if (clickCount === 5) {
+                this.style.animation = 'pulse 0.5s ease-in-out';
+                setTimeout(() => {
+                    this.style.animation = '';
+                    clickCount = 0;
+                }, 500);
+                
+                // Add a special snarky task
+                const easterEggTasks = [
+                    "Click the title 5 times like you just did",
+                    "Look for Easter eggs in productivity apps",
+                    "Spend time clicking random things instead of working",
+                    "Count how many times you've clicked this title"
+                ];
+                
+                const randomTask = easterEggTasks[Math.floor(Math.random() * easterEggTasks.length)];
+                document.getElementById('task-input').value = randomTask;
+            }
+        });
+
+        // Add motivational notifications (non-intrusive)
+        function showMotivationalMessage() {
+            const messages = [
+                "Great job avoiding responsibilities! 🎉",
+                "Your procrastination skills are improving! 📈",
+                "Remember: Not all heroes wear capes, some just avoid tasks! 🦸‍♀️",
+                "You're becoming a professional avoider! 🏆"
+            ];
+            
+            if (tasks.filter(t => t.refused).length > 0 && Math.random() < 0.3) {
+                const message = messages[Math.floor(Math.random() * messages.length)];
+                
+                // Create a subtle notification
+                const notification = document.createElement('div');
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: linear-gradient(135deg, #667eea, #764ba2);
+                    color: white;
+                    padding: 1rem 1.5rem;
+                    border-radius: 12px;
+                    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+                    z-index: 1000;
+                    animation: slideInRight 0.5s ease-out;
+                    max-width: 300px;
+                    font-weight: 600;
+                `;
+                notification.textContent = message;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOutRight 0.5s ease-in forwards';
+                    setTimeout(() => document.body.removeChild(notification), 500);
+                }, 3000);
+            }
+        }
+
+        // Add CSS for slide animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideInRight {
+                from {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOutRight {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(100%);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Trigger motivational messages occasionally
+        setInterval(showMotivationalMessage, 60000); // Every minute
+
+        // Add search functionality
+        function addSearchFilter() {
+            const searchInput = document.createElement('input');
+            searchInput.type = 'text';
+            searchInput.placeholder = 'Search anti-tasks...';
+            searchInput.className = 'task-input';
+            searchInput.style.marginBottom = '1rem';
+            searchInput.id = 'search-input';
+            
+            const filterTabs = document.querySelector('.filter-tabs');
+            filterTabs.parentNode.insertBefore(searchInput, filterTabs);
+            
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const taskItems = document.querySelectorAll('.task-item');
+                
+                taskItems.forEach(item => {
+                    const taskText = item.querySelector('.task-text').textContent.toLowerCase();
+                    const shouldShow = taskText.includes(searchTerm);
+                    item.style.display = shouldShow ? 'block' : 'none';
+                });
+            });
+        }
+
+        // Initialize search after DOM is loaded
+        setTimeout(addSearchFilter, 100);
+
+        // Add drag and drop reordering
+        let draggedElement = null;
+
+        function makeDraggable() {
+            const taskItems = document.querySelectorAll('.task-item');
+            taskItems.forEach(item => {
+                item.draggable = true;
+                item.addEventListener('dragstart', handleDragStart);
+                item.addEventListener('dragover', handleDragOver);
+                item.addEventListener('drop', handleDrop);
+                item.addEventListener('dragend', handleDragEnd);
+            });
+        }
+
+        function handleDragStart(e) {
+            draggedElement = this;
+            this.style.opacity = '0.5';
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+        }
+
+        function handleDrop(e) {
+            e.preventDefault();
+            if (this !== draggedElement) {
+                const allItems = Array.from(document.querySelectorAll('.task-item'));
+                const draggedIndex = allItems.indexOf(draggedElement);
+                const targetIndex = allItems.indexOf(this);
+                
+                // Reorder tasks array
+                const draggedTask = tasks.splice(draggedIndex, 1)[0];
+                tasks.splice(targetIndex, 0, draggedTask);
+                
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        function handleDragEnd(e) {
+            this.style.opacity = '';
+            draggedElement = null;
+        }
+
+        // Apply drag and drop after each render
+        const originalRenderTasks = renderTasks;
+        renderTasks = function() {
+            originalRenderTasks();
+            setTimeout(makeDraggable, 100);
+        };
+    </script>
+</body>
+</html>
