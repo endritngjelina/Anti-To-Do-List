@@ -1,0 +1,1983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-To-Do List - Professional Productivity Tool</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #FF9500;
+            --primary-dark: #E67E00;
+            --secondary-color: #232F3E;
+            --accent-color: #146EB4;
+            --accent-light: #1976D2;
+            --danger-color: #D13212;
+            --danger-light: #F56565;
+            --success-color: #067D62;
+            --success-light: #38A169;
+            --warning-color: #F59E0B;
+            --info-color: #3B82F6;
+            --background: #FAFAFA;
+            --background-gradient: linear-gradient(135deg, #FAFAFA 0%, #F0F2F2 100%);
+            --surface: #FFFFFF;
+            --surface-elevated: #FFFFFF;
+            --text-primary: #0F1111;
+            --text-secondary: #565959;
+            --text-muted: #9CA3AF;
+            --border: #D5D9D9;
+            --border-light: #E5E7EB;
+            --shadow: rgba(15, 17, 17, 0.15);
+            --shadow-lg: rgba(15, 17, 17, 0.25);
+            --shadow-xl: rgba(15, 17, 17, 0.35);
+            --glass-bg: rgba(255, 255, 255, 0.25);
+            --glass-border: rgba(255, 255, 255, 0.18);
+        }
+
+        body {
+            font-family: 'Amazon Ember', 'Helvetica Neue', Arial, sans-serif;
+            background: var(--background-gradient);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(255, 149, 0, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(20, 110, 180, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(209, 50, 18, 0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            animation: fade-in-up 0.8s ease-out;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 149, 0, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+            animation: pulse 4s ease-in-out infinite;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--secondary-color);
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+            position: relative;
+            background: linear-gradient(135deg, var(--secondary-color) 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            opacity: 0.9;
+        }
+
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stats-bar.stagger-animation > .stat-card:nth-child(1) { animation-delay: 0.1s; }
+        .stats-bar.stagger-animation > .stat-card:nth-child(2) { animation-delay: 0.2s; }
+        .stats-bar.stagger-animation > .stat-card:nth-child(3) { animation-delay: 0.3s; }
+        .stats-bar.stagger-animation > .stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+        .stat-card {
+            background: var(--surface);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px var(--shadow);
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            border: 1px solid var(--border-light);
+            opacity: 0;
+            animation: fade-in-up 0.6s ease-out forwards;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 40px var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .stat-card:hover::before {
+            left: 100%;
+        }
+
+        .stat-card.pulse-on-update {
+            animation: pulse-update 0.6s ease-out;
+        }
+
+        @keyframes pulse-update {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background: rgba(255, 149, 0, 0.1); }
+            100% { transform: scale(1); }
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--accent-color) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            display: block;
+            text-shadow: none;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .todo-section {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px var(--shadow);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .todo-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color), var(--success-color));
+        }
+
+        .input-section {
+            margin-bottom: 2rem;
+        }
+
+        .input-container {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .todo-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            background: var(--surface);
+            position: relative;
+        }
+
+        .todo-input:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(20, 110, 180, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .todo-input::placeholder {
+            color: var(--text-muted);
+            transition: color 0.3s ease;
+        }
+
+        .todo-input:focus::placeholder {
+            color: transparent;
+        }
+
+        .category-select {
+            padding: 1rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            background: var(--surface);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            appearance: none;
+            background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6,9 12,15 18,9'%3e%3c/polyline%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1rem;
+            padding-right: 3rem;
+        }
+
+        .category-select:focus {
+            outline: none;
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 4px rgba(20, 110, 180, 0.15);
+        }
+
+        .add-btn {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(255, 149, 0, 0.3);
+        }
+
+        .add-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .add-btn:hover {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #CC6600 100%);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(255, 149, 0, 0.4);
+        }
+
+        .add-btn:hover::before {
+            left: 100%;
+        }
+
+        .add-btn:active {
+            transform: translateY(0) scale(1.02);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-tab {
+            background: var(--surface);
+            border: 2px solid var(--border);
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            font-weight: 500;
+            font-size: 0.9rem;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px var(--shadow);
+        }
+
+        .filter-tab::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .filter-tab.active {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+            color: white;
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(20, 110, 180, 0.3);
+        }
+
+        .filter-tab:hover:not(.active) {
+            background: white;
+            border-color: var(--accent-color);
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .filter-tab span {
+            position: relative;
+            z-index: 1;
+        }
+
+        .todo-list {
+            min-height: 200px;
+        }
+
+        .todo-item {
+            background: var(--surface);
+            border: 2px solid var(--border-light);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px var(--shadow);
+            opacity: 0;
+            animation: slide-in-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .todo-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -5px;
+            width: 5px;
+            height: 100%;
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            transition: width 0.3s ease;
+        }
+
+        .todo-item:hover {
+            transform: translateX(8px) translateY(-2px);
+            box-shadow: 0 8px 30px var(--shadow-lg);
+            border-color: var(--primary-color);
+        }
+
+        .todo-item:hover::before {
+            width: 8px;
+        }
+
+        .todo-item.refused {
+            background: linear-gradient(135deg, #FFF5F5 0%, #FED7D7 100%);
+            border-color: var(--danger-color);
+            opacity: 0.85;
+            position: relative;
+            animation: slide-in-up 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        .todo-item.refused::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 15px,
+                rgba(209, 50, 18, 0.08) 15px,
+                rgba(209, 50, 18, 0.08) 30px
+            );
+            pointer-events: none;
+        }
+
+        .todo-item.refused::before {
+            background: linear-gradient(135deg, var(--danger-color), var(--danger-light));
+        }
+
+        .todo-item.completed-animation {
+            animation: complete-task 0.8s ease-out;
+        }
+
+        @keyframes complete-task {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); background: rgba(6, 125, 98, 0.1); }
+            100% { transform: scale(1); }
+        }
+
+        .todo-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+
+        .todo-text {
+            flex: 1;
+        }
+
+        .todo-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .todo-item.refused .todo-title {
+            text-decoration: line-through;
+            color: var(--danger-color);
+        }
+
+        .todo-category {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+            color: white;
+            padding: 0.3rem 1rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(20, 110, 180, 0.3);
+            position: relative;
+            z-index: 2;
+        }
+
+        .todo-timestamp {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .action-btn {
+            background: var(--surface);
+            border: 2px solid;
+            padding: 0.6rem 1.2rem;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .action-btn:hover::before {
+            left: 100%;
+        }
+
+        .refuse-btn {
+            border-color: var(--danger-color);
+            color: var(--danger-color);
+            box-shadow: 0 2px 8px rgba(209, 50, 18, 0.2);
+        }
+
+        .refuse-btn:hover {
+            background: var(--danger-color);
+            color: white;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(209, 50, 18, 0.3);
+        }
+
+        .unreject-btn {
+            border-color: var(--success-color);
+            color: var(--success-color);
+            box-shadow: 0 2px 8px rgba(6, 125, 98, 0.2);
+        }
+
+        .unreject-btn:hover {
+            background: var(--success-color);
+            color: white;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(6, 125, 98, 0.3);
+        }
+
+        .delete-btn {
+            border-color: var(--text-secondary);
+            color: var(--text-secondary);
+            box-shadow: 0 2px 8px rgba(86, 89, 89, 0.2);
+        }
+
+        .delete-btn:hover {
+            background: var(--text-secondary);
+            color: white;
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(86, 89, 89, 0.3);
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .quote-card {
+            background: linear-gradient(135deg, var(--secondary-color) 0%, #37475A 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(35, 47, 62, 0.4);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .quote-card::before {
+            content: '"';
+            position: absolute;
+            top: -20px;
+            left: 15px;
+            font-size: 10rem;
+            opacity: 0.08;
+            font-weight: bold;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .quote-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: radial-gradient(circle, rgba(255, 149, 0, 0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .quote-text {
+            font-size: 1.1rem;
+            font-style: italic;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-author {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            text-align: right;
+        }
+
+        .refresh-quote {
+            background: rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 1rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .refresh-quote::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .refresh-quote:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.4);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .refresh-quote:hover::before {
+            left: 100%;
+        }
+
+        .productivity-tips {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px var(--shadow);
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .productivity-tips::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--warning-color), var(--info-color), var(--success-color));
+        }
+
+        .productivity-tips h3 {
+            color: var(--secondary-color);
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+            font-weight: 600;
+            position: relative;
+        }
+
+        .tip-item {
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-light);
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            position: relative;
+            padding-left: 1rem;
+        }
+
+        .tip-item::before {
+            content: '💡';
+            position: absolute;
+            left: 0;
+            top: 1rem;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+
+        .tip-item:hover {
+            color: var(--text-primary);
+            padding-left: 1.5rem;
+            background: rgba(255, 149, 0, 0.05);
+            border-radius: 8px;
+            margin: 0 -0.5rem;
+            padding-right: 0.5rem;
+        }
+
+        .tip-item:last-child {
+            border-bottom: none;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .empty-state::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(255, 149, 0, 0.05) 0%, transparent 70%);
+            border-radius: 50%;
+            z-index: -1;
+        }
+
+        .empty-state .emoji {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            display: block;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            font-weight: 600;
+        }
+
+        .empty-state p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            max-width: 300px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        .export-section {
+            background: var(--surface);
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px var(--shadow);
+            border: 1px solid var(--border-light);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .export-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent-color), var(--primary-color));
+        }
+
+        .export-btn {
+            background: linear-gradient(135deg, var(--accent-color), var(--accent-light));
+            color: white;
+            border: none;
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            width: 100%;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(20, 110, 180, 0.3);
+        }
+
+        .export-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #0F5A94, var(--accent-color));
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 25px rgba(20, 110, 180, 0.4);
+        }
+
+        .export-btn:hover::before {
+            left: 100%;
+        }
+
+        .export-btn:last-child {
+            background: linear-gradient(135deg, var(--danger-color), var(--danger-light));
+            box-shadow: 0 4px 15px rgba(209, 50, 18, 0.3);
+        }
+
+        .export-btn:last-child:hover {
+            background: linear-gradient(135deg, #B02A0F, var(--danger-color));
+            box-shadow: 0 8px 25px rgba(209, 50, 18, 0.4);
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .input-container {
+                flex-direction: column;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes pulse {
+            0%, 100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        @keyframes shimmer {
+            0% {
+                background-position: -200px 0;
+            }
+            100% {
+                background-position: calc(200px + 100%) 0;
+            }
+        }
+
+        .loading-shimmer {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200px 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        .todo-item {
+            animation: slideIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        /* Glassmorphism effect for enhanced UI */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+
+        /* Advanced Material Design Shadows */
+        .shadow-sm { box-shadow: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24); }
+        .shadow-md { box-shadow: 0 4px 6px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.06); }
+        .shadow-lg { box-shadow: 0 10px 15px rgba(0,0,0,0.1), 0 4px 6px rgba(0,0,0,0.05); }
+        .shadow-xl { box-shadow: 0 20px 25px rgba(0,0,0,0.15), 0 10px 10px rgba(0,0,0,0.04); }
+        .shadow-2xl { box-shadow: 0 25px 50px rgba(0,0,0,0.25); }
+        .shadow-inner { box-shadow: inset 0 2px 4px rgba(0,0,0,0.06); }
+        .shadow-glow { box-shadow: 0 0 20px rgba(255, 149, 0, 0.3); }
+        .shadow-accent { box-shadow: 0 8px 32px rgba(20, 110, 180, 0.2); }
+
+        /* Micro-interaction Classes */
+        .hover-lift { transition: transform 0.2s ease; }
+        .hover-lift:hover { transform: translateY(-4px); }
+        
+        .hover-scale { transition: transform 0.2s ease; }
+        .hover-scale:hover { transform: scale(1.05); }
+        
+        .hover-rotate { transition: transform 0.3s ease; }
+        .hover-rotate:hover { transform: rotate(5deg); }
+        
+        .hover-brightness { transition: filter 0.2s ease; }
+        .hover-brightness:hover { filter: brightness(1.1); }
+
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .loading-spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Notification System */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 1rem 1.5rem;
+            box-shadow: var(--shadow-xl);
+            border-left: 4px solid var(--success-color);
+            transform: translateX(400px);
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.success { border-left-color: var(--success-color); }
+        .notification.error { border-left-color: var(--danger-color); }
+        .notification.warning { border-left-color: var(--warning-color); }
+        .notification.info { border-left-color: var(--info-color); }
+
+        /* Advanced Button Variants */
+        .btn-ghost {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-ghost::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--primary-color);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn-ghost:hover {
+            color: white;
+        }
+
+        .btn-ghost:hover::before {
+            left: 0;
+        }
+
+        .btn-outline-animated {
+            background: transparent;
+            border: 2px solid var(--accent-color);
+            color: var(--accent-color);
+            position: relative;
+            overflow: hidden;
+            transition: color 0.3s ease;
+        }
+
+        .btn-outline-animated::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: var(--accent-color);
+            transition: width 0.3s ease;
+            z-index: -1;
+        }
+
+        .btn-outline-animated:hover {
+            color: white;
+        }
+
+        .btn-outline-animated:hover::before {
+            width: 100%;
+        }
+
+        /* Enhanced Form Elements */
+        .form-group {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            position: absolute;
+            top: 1rem;
+            left: 1.5rem;
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+            pointer-events: none;
+            background: var(--surface);
+            padding: 0 0.5rem;
+        }
+
+        .form-input:focus + .form-label,
+        .form-input:not(:placeholder-shown) + .form-label {
+            top: -0.5rem;
+            left: 1rem;
+            font-size: 0.8rem;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem 1.5rem;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            background: var(--surface);
+        }
+
+        .form-input:focus {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 0 3px rgba(20, 110, 180, 0.1);
+            outline: none;
+        }
+
+        /* Advanced Card Variants */
+        .card-hover-3d {
+            transition: transform 0.3s ease;
+            transform-style: preserve-3d;
+        }
+
+        .card-hover-3d:hover {
+            transform: rotateX(5deg) rotateY(5deg) translateZ(20px);
+        }
+
+        .card-floating {
+            position: relative;
+            animation: float-gentle 6s ease-in-out infinite;
+        }
+
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .card-tilt {
+            transition: transform 0.3s ease;
+        }
+
+        .card-tilt:hover {
+            transform: perspective(1000px) rotateY(10deg);
+        }
+
+        /* Progress Bars */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--border-light);
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            border-radius: 4px;
+            transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: progress-shine 2s infinite;
+        }
+
+        @keyframes progress-shine {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Tooltip System */
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip::before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 120%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--secondary-color);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+            z-index: 1000;
+        }
+
+        .tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: 110%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: var(--secondary-color);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .tooltip:hover::before,
+        .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Badge System */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-primary { 
+            background: var(--primary-color); 
+            color: white; 
+        }
+
+        .badge-success { 
+            background: var(--success-color); 
+            color: white; 
+        }
+
+        .badge-danger { 
+            background: var(--danger-color); 
+            color: white; 
+        }
+
+        .badge-warning { 
+            background: var(--warning-color); 
+            color: white; 
+        }
+
+        .badge-info { 
+            background: var(--info-color); 
+            color: white; 
+        }
+
+        .badge-outline {
+            background: transparent;
+            border: 1px solid currentColor;
+        }
+
+        /* Enhanced Typography */
+        .text-gradient {
+            background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .text-shadow {
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .text-glow {
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        /* Interactive States */
+        .interactive {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .interactive:hover {
+            transform: translateY(-1px);
+        }
+
+        .interactive:active {
+            transform: translateY(1px);
+        }
+
+        /* Pulse Animation */
+        .pulse {
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        /* Bounce Animation */
+        .bounce {
+            animation: bounce-animation 1s ease infinite;
+        }
+
+        @keyframes bounce-animation {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Slide Animations */
+        .slide-in-left {
+            animation: slide-in-left 0.5s ease-out;
+        }
+
+        @keyframes slide-in-left {
+            from { transform: translateX(-100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .slide-in-right {
+            animation: slide-in-right 0.5s ease-out;
+        }
+
+        @keyframes slide-in-right {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        .slide-in-up {
+            animation: slide-in-up 0.5s ease-out;
+        }
+
+        @keyframes slide-in-up {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Fade Animations */
+        .fade-in {
+            animation: fade-in 0.5s ease-out;
+        }
+
+        @keyframes fade-in {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .fade-in-up {
+            animation: fade-in-up 0.6s ease-out;
+        }
+
+        @keyframes fade-in-up {
+            from { 
+                opacity: 0; 
+                transform: translateY(30px); 
+            }
+            to { 
+                opacity: 1; 
+                transform: translateY(0); 
+            }
+        }
+
+        /* Stagger Animation */
+        .stagger-animation > * {
+            opacity: 0;
+            animation: fade-in-up 0.6s ease-out forwards;
+        }
+
+        .stagger-animation > *:nth-child(1) { animation-delay: 0.1s; }
+        .stagger-animation > *:nth-child(2) { animation-delay: 0.2s; }
+        .stagger-animation > *:nth-child(3) { animation-delay: 0.3s; }
+        .stagger-animation > *:nth-child(4) { animation-delay: 0.4s; }
+        .stagger-animation > *:nth-child(5) { animation-delay: 0.5s; }
+        .stagger-animation > *:nth-child(6) { animation-delay: 0.6s; }
+
+        /* Focus Management */
+        .focus-ring {
+            transition: box-shadow 0.2s ease;
+        }
+
+        .focus-ring:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(20, 110, 180, 0.5);
+        }
+
+        /* Dark Mode Support */
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --background: #0F0F0F;
+                --surface: #1A1A1A;
+                --text-primary: #FFFFFF;
+                --text-secondary: #B3B3B3;
+                --border: #333333;
+                --shadow: rgba(0, 0, 0, 0.5);
+            }
+        }
+
+        /* High Contrast Mode */
+        @media (prefers-contrast: high) {
+            :root {
+                --primary-color: #FF6600;
+                --accent-color: #0066CC;
+                --text-primary: #000000;
+                --background: #FFFFFF;
+            }
+        }
+
+        /* Reduced Motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header slide-in-up">
+            <h1 class="text-gradient">Anti-To-Do List</h1>
+            <p class="subtitle fade-in">Celebrate what you're NOT doing today. Professional productivity, reimagined.</p>
+        </div>
+
+        <div class="stats-bar stagger-animation" id="statsBar">
+            <div class="stat-card tooltip" data-tooltip="Total tasks added to your anti-list">
+                <span class="stat-number" id="totalTasks">0</span>
+                <div class="stat-label">Total Tasks</div>
+                <div class="progress-bar" style="margin-top: 0.5rem;">
+                    <div class="progress-fill" id="totalProgress" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="stat-card tooltip" data-tooltip="Tasks you've successfully refused">
+                <span class="stat-number text-gradient" id="refusedTasks">0</span>
+                <div class="stat-label">Successfully Refused</div>
+                <div class="progress-bar" style="margin-top: 0.5rem;">
+                    <div class="progress-fill" id="refusedProgress" style="width: 0%;"></div>
+                </div>
+            </div>
+            <div class="stat-card tooltip" data-tooltip="Percentage of tasks you've refused">
+                <span class="stat-number" id="productivityScore">0%</span>
+                <div class="stat-label">Refusal Rate</div>
+                <span class="badge badge-success" id="refusalBadge" style="margin-top: 0.5rem; display: none;">Excellent!</span>
+            </div>
+            <div class="stat-card tooltip card-floating" data-tooltip="Your current anti-productivity streak">
+                <span class="stat-number pulse" id="streakDays">1</span>
+                <div class="stat-label">Day Streak</div>
+                <span class="badge badge-primary" style="margin-top: 0.5rem;">🔥 On Fire!</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="todo-section">
+                <div class="input-section">
+                    <div class="input-container">
+                        <input type="text" class="todo-input" id="todoInput" placeholder="What are you refusing to do today?">
+                        <select class="category-select" id="categorySelect">
+                            <option value="work">Work</option>
+                            <option value="personal">Personal</option>
+                            <option value="social">Social</option>
+                            <option value="health">Health</option>
+                            <option value="finance">Finance</option>
+                            <option value="learning">Learning</option>
+                        </select>
+                        <button class="add-btn" id="addBtn">Add Anti-Task</button>
+                    </div>
+                </div>
+
+                <div class="filter-tabs">
+                    <div class="filter-tab active" data-filter="all">All Tasks</div>
+                    <div class="filter-tab" data-filter="active">Active</div>
+                    <div class="filter-tab" data-filter="refused">Refused</div>
+                    <div class="filter-tab" data-filter="work">Work</div>
+                    <div class="filter-tab" data-filter="personal">Personal</div>
+                    <div class="filter-tab" data-filter="social">Social</div>
+                </div>
+
+                <div class="todo-list" id="todoList">
+                    <div class="empty-state">
+                        <div style="font-size: 4rem; margin-bottom: 1rem;">🚫</div>
+                        <h3>No anti-tasks yet!</h3>
+                        <p>Add something you're proudly refusing to do today.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="sidebar slide-in-right">
+                <div class="quote-card card-hover-3d">
+                    <div class="quote-text fade-in" id="quoteText">The art of being wise is knowing what to overlook.</div>
+                    <div class="quote-author fade-in" id="quoteAuthor">— William James</div>
+                    <button class="refresh-quote hover-scale focus-ring" id="refreshQuote">
+                        <span>✨ New Quote</span>
+                    </button>
+                </div>
+
+                <div class="productivity-tips card-tilt">
+                    <h3>🎯 Anti-Productivity Tips</h3>
+                    <div class="tip-item interactive">Perfect is the enemy of done - so don't even start!</div>
+                    <div class="tip-item interactive">Multitasking is overrated. Try no-tasking instead.</div>
+                    <div class="tip-item interactive">The best meetings are the ones you don't attend.</div>
+                    <div class="tip-item interactive">Email can wait. Everything is less urgent than it seems.</div>
+                    <div class="tip-item interactive">Sometimes the most productive thing is a strategic nap.</div>
+                </div>
+
+                <div class="export-section">
+                    <h3 style="margin-bottom: 1.5rem; color: var(--secondary-color);">📊 Export & Actions</h3>
+                    <button class="export-btn hover-lift focus-ring" id="exportJson">
+                        <span>📋 Export as JSON</span>
+                    </button>
+                    <button class="export-btn hover-lift focus-ring" id="exportCsv">
+                        <span>📈 Export as CSV</span>
+                    </button>
+                    <button class="export-btn hover-lift focus-ring" id="shareProgress">
+                        <span>🔗 Share Progress</span>
+                    </button>
+                    <button class="export-btn hover-lift focus-ring" id="clearAll">
+                        <span>🗑️ Clear All Data</span>
+                    </button>
+                </div>
+
+                <!-- Performance Metrics Panel -->
+                <div class="export-section" style="margin-top: 1rem;">
+                    <h3 style="margin-bottom: 1rem; color: var(--secondary-color);">⚡ Performance</h3>
+                    <div class="stat-item" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Response Time:</span>
+                        <span class="badge badge-success" id="responseTime">~2ms</span>
+                    </div>
+                    <div class="stat-item" style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <span>Tasks/Hour:</span>
+                        <span class="badge badge-info" id="tasksPerHour">12</span>
+                    </div>
+                    <div class="stat-item" style="display: flex; justify-content: space-between;">
+                        <span>Efficiency:</span>
+                        <span class="badge badge-primary" id="efficiency">98%</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Container -->
+    <div id="notificationContainer" style="position: fixed; top: 20px; right: 20px; z-index: 1000;"></div>
+
+    <script>
+        class AntiTodoApp {
+            constructor() {
+                this.tasks = JSON.parse(localStorage.getItem('antiTodoTasks')) || [];
+                this.currentFilter = 'all';
+                this.quotes = [
+                    { text: "The art of being wise is knowing what to overlook.", author: "William James" },
+                    { text: "It is not the man who has too little, but the man who craves more, who is poor.", author: "Seneca" },
+                    { text: "Simplicity is the ultimate sophistication.", author: "Leonardo da Vinci" },
+                    { text: "The best way to get something done is to begin.", author: "Unknown Procrastinator (Never)" },
+                    { text: "I love deadlines. I like the whooshing sound they make as they fly by.", author: "Douglas Adams" },
+                    { text: "The trouble with having an open mind is that people keep coming along and trying to put things in it.", author: "Terry Pratchett" },
+                    { text: "I'm not lazy, I'm on energy saving mode.", author: "Anonymous" },
+                    { text: "Due tomorrow? Do tomorrow.", author: "Every College Student" },
+                    { text: "Procrastination is the art of keeping up with yesterday.", author: "Don Marquis" },
+                    { text: "Why do today what you can put off until tomorrow?", author: "Ancient Wisdom" },
+                    { text: "I'll stop procrastinating tomorrow.", author: "Everyone" },
+                    { text: "The sooner you fall behind, the more time you'll have to catch up.", author: "Optimistic Logic" }
+                ];
+                
+                this.initializeEventListeners();
+                this.render();
+                this.updateStats();
+                this.showRandomQuote();
+                this.initializeAnimations();
+            }
+
+            initializeEventListeners() {
+                document.getElementById('addBtn').addEventListener('click', () => this.addTask());
+                document.getElementById('todoInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+                
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => this.setFilter(e.currentTarget.dataset.filter));
+                });
+
+                document.getElementById('refreshQuote').addEventListener('click', () => this.showRandomQuote());
+                document.getElementById('exportJson').addEventListener('click', () => this.exportData('json'));
+                document.getElementById('exportCsv').addEventListener('click', () => this.exportData('csv'));
+                document.getElementById('shareProgress').addEventListener('click', () => this.shareProgress());
+                document.getElementById('clearAll').addEventListener('click', () => this.clearAllData());
+
+                // Add keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        switch(e.key) {
+                            case 'Enter':
+                                e.preventDefault();
+                                this.addTask();
+                                break;
+                            case 'k':
+                                e.preventDefault();
+                                document.getElementById('todoInput').focus();
+                                break;
+                        }
+                    }
+                });
+            }
+
+            showNotification(message, type = 'success') {
+                const container = document.getElementById('notificationContainer');
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.innerHTML = `
+                    <div style="font-weight: 600; margin-bottom: 0.25rem;">${this.getNotificationTitle(type)}</div>
+                    <div style="font-size: 0.9rem; opacity: 0.9;">${message}</div>
+                `;
+                
+                container.appendChild(notification);
+                
+                // Trigger animation
+                setTimeout(() => notification.classList.add('show'), 10);
+                
+                // Auto remove
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    setTimeout(() => container.removeChild(notification), 300);
+                }, 3000);
+            }
+
+            getNotificationTitle(type) {
+                const titles = {
+                    success: '✅ Success!',
+                    error: '❌ Error!',
+                    warning: '⚠️ Warning!',
+                    info: 'ℹ️ Info'
+                };
+                return titles[type] || 'Notification';
+            }
+
+            initializeAnimations() {
+                // Add stagger animation to stats
+                const statsBar = document.getElementById('statsBar');
+                statsBar.classList.add('stagger-animation');
+                
+                // Simulate performance metrics updates
+                this.updatePerformanceMetrics();
+                setInterval(() => this.updatePerformanceMetrics(), 5000);
+            }
+
+            updatePerformanceMetrics() {
+                const responseTime = Math.random() * 3 + 1;
+                const tasksPerHour = Math.floor(Math.random() * 20) + 5;
+                const efficiency = Math.floor(Math.random() * 5) + 95;
+                
+                document.getElementById('responseTime').textContent = `~${responseTime.toFixed(1)}ms`;
+                document.getElementById('tasksPerHour').textContent = tasksPerHour;
+                document.getElementById('efficiency').textContent = `${efficiency}%`;
+            }
+
+            addTask() {
+                const input = document.getElementById('todoInput');
+                const categorySelect = document.getElementById('categorySelect');
+                const taskText = input.value.trim();
+                
+                if (!taskText) {
+                    this.showNotification('Please enter a task to refuse!', 'warning');
+                    input.focus();
+                    return;
+                }
+
+                // Show loading state
+                this.setLoadingState(true);
+
+                // Simulate API delay for realism
+                setTimeout(() => {
+                    const task = {
+                        id: Date.now() + Math.random(),
+                        text: taskText,
+                        category: categorySelect.value,
+                        refused: false,
+                        createdAt: new Date().toISOString(),
+                        refusedAt: null
+                    };
+
+                    this.tasks.unshift(task);
+                    this.saveTasks();
+                    this.render();
+                    this.updateStats();
+                    this.updateFilterCounts();
+                    
+                    input.value = '';
+                    input.focus();
+                    
+                    this.setLoadingState(false);
+                    this.showNotification(`Added "${taskText}" to your anti-todo list!`);
+                }, 300);
+            }
+
+            setLoadingState(loading) {
+                const btn = document.getElementById('addBtn');
+                const btnText = document.getElementById('addBtnText');
+                const spinner = document.getElementById('addBtnSpinner');
+                
+                if (loading) {
+                    btn.disabled = true;
+                    btnText.textContent = 'Adding...';
+                    spinner.style.display = 'inline-block';
+                    btn.style.opacity = '0.7';
+                } else {
+                    btn.disabled = false;
+                    btnText.textContent = 'Add Anti-Task';
+                    spinner.style.display = 'none';
+                    btn.style.opacity = '1';
+                }
+            }
+
+            toggleTask(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (task) {
+                    const wasRefused = task.refused;
+                    task.refused = !task.refused;
+                    task.refusedAt = task.refused ? new Date().toISOString() : null;
+                    
+                    // Add completion animation
+                    const taskElement = document.querySelector(`[data-id="${id}"]`);
+                    if (taskElement) {
+                        taskElement.classList.add('completed-animation');
+                        setTimeout(() => taskElement.classList.remove('completed-animation'), 800);
+                    }
+                    
+                    this.saveTasks();
+                    this.render();
+                    this.updateStats();
+                    this.updateFilterCounts();
+                    
+                    const action = task.refused ? 'refused' : 'un-refused';
+                    this.showNotification(`Task ${action} successfully!`, task.refused ? 'success' : 'info');
+                }
+            }
+
+            deleteTask(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (task && confirm(`Are you sure you want to delete "${task.text}"?`)) {
+                    this.tasks = this.tasks.filter(t => t.id !== id);
+                    this.saveTasks();
+                    this.render();
+                    this.updateStats();
+                    this.updateFilterCounts();
+                    this.showNotification('Task deleted successfully!', 'info');
+                }
+            }
+
+            setFilter(filter) {
+                this.currentFilter = filter;
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.filter === filter);
+                });
+                this.render();
+            }
+
+            updateFilterCounts() {
+                const counts = {
+                    all: this.tasks.length,
+                    active: this.tasks.filter(t => !t.refused).length,
+                    refused: this.tasks.filter(t => t.refused).length,
+                    work: this.tasks.filter(t => t.category === 'work').length,
+                    personal: this.tasks.filter(t => t.category === 'personal').length,
+                    social: this.tasks.filter(t => t.category === 'social').length
+                };
+
+                Object.keys(counts).forEach(key => {
+                    const element = document.getElementById(`${key}Count`);
+                    if (element) {
+                        element.textContent = counts[key];
+                        element.style.display = counts[key] > 0 ? 'inline-block' : 'none';
+                    }
+                });
+            }
+
+            shareProgress() {
+                const refused = this.tasks.filter(t => t.refused).length;
+                const total = this.tasks.length;
+                const rate = total > 0 ? Math.round((refused / total) * 100) : 0;
+                
+                const shareText = `🚫 I've successfully refused ${refused} out of ${total} tasks today! My anti-productivity rate is ${rate}%. Join me in productive procrastination! #AntiTodoList #ProductiveProcrastination`;
+                
+                if (navigator.share) {
+                    navigator.share({
+                        title: 'My Anti-Todo Progress',
+                        text: shareText,
+                        url: window.location.href
+                    });
+                } else {
+                    navigator.clipboard.writeText(shareText).then(() => {
+                        this.showNotification('Progress copied to clipboard!', 'success');
+                    });
+                }
+            }
+
+            getFilteredTasks() {
+                return this.tasks.filter(task => {
+                    switch (this.currentFilter) {
+                        case 'active': return !task.refused;
+                        case 'refused': return task.refused;
+                        case 'all': return true;
+                        default: return task.category === this.currentFilter;
+                    }
+                });
+            }
+
+            render() {
+                const todoList = document.getElementById('todoList');
+                const filteredTasks = this.getFilteredTasks();
+
+                if (filteredTasks.length === 0) {
+                    todoList.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 4rem; margin-bottom: 1rem;">🚫</div>
+                            <h3>No tasks in this category!</h3>
+                            <p>Add some anti-tasks to get started with productive procrastination.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                todoList.innerHTML = filteredTasks.map(task => `
+                    <div class="todo-item ${task.refused ? 'refused' : ''}" data-id="${task.id}">
+                        <div class="todo-content">
+                            <div class="todo-text">
+                                <div class="todo-category">${task.category.toUpperCase()}</div>
+                                <div class="todo-title">${this.escapeHtml(task.text)}</div>
+                                <div class="todo-timestamp">
+                                    Created: ${new Date(task.createdAt).toLocaleString()}
+                                    ${task.refusedAt ? `• Refused: ${new Date(task.refusedAt).toLocaleString()}` : ''}
+                                </div>
+                            </div>
+                            <div class="todo-actions">
+                                <button class="action-btn ${task.refused ? 'unreject-btn' : 'refuse-btn'}" 
+                                        onclick="app.toggleTask(${task.id})">
+                                    ${task.refused ? '↩ Unreject' : '✋ Refuse'}
+                                </button>
+                                <button class="action-btn delete-btn" onclick="app.deleteTask(${task.id})">
+                                    🗑 Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            updateStats() {
+                const total = this.tasks.length;
+                const refused = this.tasks.filter(t => t.refused).length;
+                const refusalRate = total > 0 ? Math.round((refused / total) * 100) : 0;
+
+                // Animate stat updates
+                this.animateStatUpdate('totalTasks', total);
+                this.animateStatUpdate('refusedTasks', refused);
+                this.animateStatUpdate('productivityScore', `${refusalRate}%`);
+                
+                // Update progress bars
+                document.getElementById('totalProgress').style.width = `${Math.min(total * 10, 100)}%`;
+                document.getElementById('refusedProgress').style.width = `${refusalRate}%`;
+                
+                // Update badges
+                const refusalBadge = document.getElementById('refusalBadge');
+                if (refusalRate >= 70) {
+                    refusalBadge.textContent = 'Excellent!';
+                    refusalBadge.className = 'badge badge-success';
+                    refusalBadge.style.display = 'inline-block';
+                } else if (refusalRate >= 50) {
+                    refusalBadge.textContent = 'Good Job!';
+                    refusalBadge.className = 'badge badge-info';
+                    refusalBadge.style.display = 'inline-block';
+                } else {
+                    refusalBadge.style.display = 'none';
+                }
+                
+                // Simple streak calculation
+                const streak = refused > 0 ? Math.min(refused, 7) : 1;
+                this.animateStatUpdate('streakDays', streak);
+            }
+
+            animateStatUpdate(elementId, newValue) {
+                const element = document.getElementById(elementId);
+                const currentValue = element.textContent;
+                
+                if (currentValue !== newValue.toString()) {
+                    element.parentElement.classList.add('pulse-on-update');
+                    element.textContent = newValue;
+                    
+                    setTimeout(() => {
+                        element.parentElement.classList.remove('pulse-on-update');
+                    }, 600);
+                }
+            }
+
+            showRandomQuote() {
+                const quote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+                document.getElementById('quoteText').textContent = quote.text;
+                document.getElementById('quoteAuthor').textContent = `— ${quote.author}`;
+            }
+
+            exportData(format) {
+                if (this.tasks.length === 0) {
+                    alert('No data to export! Add some anti-tasks first.');
+                    return;
+                }
+
+                if (format === 'json') {
+                    const dataStr = JSON.stringify(this.tasks, null, 2);
+                    this.downloadFile(dataStr, 'anti-todo-list.json', 'application/json');
+                } else if (format === 'csv') {
+                    const headers = ['Task', 'Category', 'Status', 'Created At', 'Refused At'];
+                    const csvContent = [
+                        headers.join(','),
+                        ...this.tasks.map(task => [
+                            `"${task.text.replace(/"/g, '""')}"`,
+                            task.category,
+                            task.refused ? 'Refused' : 'Active',
+                            new Date(task.createdAt).toISOString(),
+                            task.refusedAt ? new Date(task.refusedAt).toISOString() : 'N/A'
+                        ].join(','))
+                    ].join('\n');
+                    
+                    this.downloadFile(csvContent, 'anti-todo-list.csv', 'text/csv');
+                }
+            }
+
+            downloadFile(content, fileName, contentType) {
+                const blob = new Blob([content], { type: contentType });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+
+            clearAllData() {
+                if (confirm('Are you sure you want to clear all anti-tasks? This action cannot be undone.')) {
+                    this.tasks = [];
+                    this.saveTasks();
+                    this.render();
+                    this.updateStats();
+                }
+            }
+
+            saveTasks() {
+                localStorage.setItem('antiTodoTasks', JSON.stringify(this.tasks));
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        }
+
+        // Initialize the application
+        const app = new AntiTodoApp();
+
+        // Add some sample data for demonstration
+        if (app.tasks.length === 0) {
+            const sampleTasks = [
+                { 
+                    id: 1, 
+                    text: "Respond to that non-urgent email from last week", 
+                    category: "work", 
+                    refused: true, 
+                    createdAt: new Date(Date.now() - 86400000).toISOString(),
+                    refusedAt: new Date().toISOString()
+                },
+                { 
+                    id: 2, 
+                    text: "Attend the 3-hour meeting about meeting efficiency", 
+                    category: "work", 
+                    refused: false, 
+                    createdAt: new Date(Date.now() - 43200000).toISOString(),
+                    refusedAt: null
+                },
+                { 
+                    id: 3, 
+                    text: "Organize my desktop icons... again", 
+                    category: "personal", 
+                    refused: true, 
+                    createdAt: new Date(Date.now() - 21600000).toISOString(),
+                    refusedAt: new Date(Date.now() - 10800000).toISOString()
+                }
+            ];
+            
+            app.tasks = sampleTasks;
+            app.saveTasks();
+            app.render();
+            app.updateStats();
+        }
+
+        // Add subtle page load animation
+        document.addEventListener('DOMContentLoaded', () => {
+            document.body.style.opacity = '0';
+            document.body.style.transform = 'translateY(20px)';
+            
+            setTimeout(() => {
+                document.body.style.transition = 'all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+                document.body.style.opacity = '1';
+                document.body.style.transform = 'translateY(0)';
+            }, 100);
+        });
+    </script>
+</body>
+</html>
