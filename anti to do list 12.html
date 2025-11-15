@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-To-Do | Productivity Reimagined</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --secondary-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --success-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --warning-gradient: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+            --purple-gradient: linear-gradient(135deg, #a855f7 0%, #7c3aed 100%);
+            --emerald-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            --dark-bg: #1a1a2e;
+            --darker-bg: #16213e;
+            --card-bg: rgba(255, 255, 255, 0.1);
+            --card-hover-bg: rgba(255, 255, 255, 0.15);
+            --text-primary: #ffffff;
+            --text-secondary: #b8c6db;
+            --text-muted: #8892b0;
+            --accent: #f39c12;
+            --accent-hover: #e67e22;
+            --shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            --shadow-hover: 0 20px 45px rgba(0, 0, 0, 0.4);
+            --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --border-radius: 16px;
+            --border-radius-small: 8px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            --transition-fast: all 0.15s ease-out;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--primary-gradient);
+            min-height: 100vh;
+            color: var(--text-primary);
+            overflow-x: hidden;
+            line-height: 1.6;
+        }
+
+        .animated-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: var(--primary-gradient);
+            overflow: hidden;
+        }
+
+        .animated-bg::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                rgba(255, 255, 255, 0.03) 2px,
+                rgba(255, 255, 255, 0.03) 4px
+            );
+            animation: drift 20s linear infinite;
+        }
+
+        .animated-bg::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.3) 0%, transparent 50%),
+                        radial-gradient(circle at 40% 40%, rgba(120, 219, 226, 0.2) 0%, transparent 50%);
+            animation: float 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes float {
+            0% { transform: translateY(0px); }
+            100% { transform: translateY(-20px); }
+        }
+
+        @keyframes drift {
+            0% { transform: translate(-50%, -50%) rotate(0deg); }
+            100% { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            position: relative;
+        }
+
+        .logo {
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: linear-gradient(45deg, #fff, #f39c12, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            position: relative;
+            display: inline-block;
+        }
+
+        .logo::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background: var(--accent);
+            border-radius: 2px;
+            animation: pulse-width 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse-width {
+            0% { width: 60px; opacity: 0.7; }
+            100% { width: 120px; opacity: 1; }
+        }
+
+        .tagline {
+            font-size: 1.3rem;
+            color: var(--text-secondary);
+            font-weight: 300;
+            margin-bottom: 2rem;
+        }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            border-radius: var(--border-radius);
+            text-align: center;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .stat-item:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: var(--shadow-hover);
+            background: var(--card-hover-bg);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-item:hover::before {
+            left: 100%;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+            display: block;
+            transition: var(--transition);
+        }
+
+        .stat-item:hover .stat-number {
+            transform: scale(1.1);
+            color: var(--accent-hover);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .anti-todo-section {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .section-title i {
+            color: var(--accent);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .task-input {
+            flex: 1;
+            padding: 1rem 1.5rem;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: var(--transition);
+            backdrop-filter: blur(10px);
+            position: relative;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 25px rgba(243, 156, 18, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.1);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .task-input::placeholder {
+            color: var(--text-secondary);
+            transition: var(--transition);
+        }
+
+        .task-input:focus::placeholder {
+            color: var(--text-muted);
+            transform: translateY(-2px);
+        }
+
+        .add-btn {
+            padding: 1rem 2rem;
+            background: var(--secondary-gradient);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 8px 20px rgba(245, 87, 108, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        .add-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(245, 87, 108, 0.5);
+        }
+
+        .add-btn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        .add-btn:active {
+            transform: translateY(-1px);
+        }
+
+        .filter-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 0.5rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+
+        .filter-tab {
+            flex: 1;
+            padding: 0.8rem 1rem;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            transition: var(--transition);
+            font-weight: 500;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .filter-tab::before {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transform: translateX(-50%);
+            transition: width 0.3s ease;
+        }
+
+        .filter-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .filter-tab.active {
+            background: var(--accent);
+            color: white;
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .filter-tab.active::before {
+            width: 100%;
+        }
+
+        .anti-todo-list {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+
+        .anti-todo-list::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .anti-todo-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+        }
+
+        .anti-todo-list::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 4px;
+        }
+
+        .anti-todo-item {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .anti-todo-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: var(--secondary-gradient);
+            transition: width 0.3s ease;
+        }
+
+        .anti-todo-item::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 0;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(255, 255, 255, 0.1), transparent);
+            transition: width 0.3s ease;
+        }
+
+        .anti-todo-item:hover {
+            transform: translateX(8px) translateY(-2px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .anti-todo-item:hover::before {
+            width: 6px;
+        }
+
+        .anti-todo-item:hover::after {
+            width: 50px;
+        }
+
+        .anti-todo-item.refused {
+            background: rgba(74, 172, 254, 0.15);
+            border-color: rgba(74, 172, 254, 0.3);
+            animation: refusal-glow 2s ease-in-out;
+        }
+
+        .anti-todo-item.refused::before {
+            background: var(--success-gradient);
+            width: 6px;
+        }
+
+        @keyframes refusal-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(74, 172, 254, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(74, 172, 254, 0.6); }
+        }
+
+        .task-content {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            background: transparent;
+            cursor: pointer;
+            transition: var(--transition);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .task-checkbox::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            background: var(--success-gradient);
+            border-radius: 50%;
+            transform: translate(-50%, -50%);
+            transition: var(--transition);
+        }
+
+        .task-checkbox:hover {
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(74, 172, 254, 0.3);
+        }
+
+        .task-checkbox.checked {
+            background: var(--success-gradient);
+            border-color: #4facfe;
+            box-shadow: 0 0 20px rgba(74, 172, 254, 0.5);
+            animation: checkbox-bounce 0.3s ease-out;
+        }
+
+        .task-checkbox.checked::before {
+            width: 100%;
+            height: 100%;
+            border-radius: 4px;
+        }
+
+        .task-checkbox.checked::after {
+            content: '✓';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 14px;
+            animation: checkmark-appear 0.2s ease-out 0.1s both;
+        }
+
+        @keyframes checkbox-bounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes checkmark-appear {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        .task-text {
+            flex: 1;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .task-text.refused {
+            text-decoration: line-through;
+            opacity: 0.8;
+            color: var(--text-secondary);
+        }
+
+        .task-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-secondary);
+        }
+
+        .action-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .delete-btn:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .quote-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .quote-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, rgba(243, 156, 18, 0.1), transparent);
+            animation: rotate 10s linear infinite;
+        }
+
+        .quote-card::after {
+            content: '"';
+            position: absolute;
+            top: 1rem;
+            left: 1.5rem;
+            font-size: 4rem;
+            color: rgba(243, 156, 18, 0.3);
+            font-family: Georgia, serif;
+            line-height: 0;
+        }
+
+        .quote-card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-hover);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .quote-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .quote-text {
+            font-size: 1.2rem;
+            font-style: italic;
+            margin-bottom: 1rem;
+            line-height: 1.6;
+            position: relative;
+            z-index: 2;
+        }
+
+        .quote-author {
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 0.9rem;
+            position: relative;
+            z-index: 2;
+        }
+
+        .refresh-quote {
+            margin-top: 1rem;
+            padding: 0.8rem 1.5rem;
+            background: transparent;
+            border: 2px solid var(--accent);
+            border-radius: 8px;
+            color: var(--accent);
+            cursor: pointer;
+            transition: var(--transition);
+            font-weight: 500;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .refresh-quote::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            transition: left 0.3s ease;
+            z-index: -1;
+        }
+
+        .refresh-quote:hover {
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .refresh-quote:hover::before {
+            left: 0;
+        }
+
+        .productivity-meter {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: var(--border-radius);
+            padding: 2rem;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+        }
+
+        .productivity-meter:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-hover);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .meter-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            background: linear-gradient(45deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .meter-bar {
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+            position: relative;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .meter-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                90deg,
+                transparent,
+                transparent 10px,
+                rgba(255, 255, 255, 0.05) 10px,
+                rgba(255, 255, 255, 0.05) 20px
+            );
+        }
+
+        .meter-fill {
+            height: 100%;
+            background: var(--success-gradient);
+            border-radius: 10px;
+            transition: width 1.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.3);
+        }
+
+        .meter-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.3), transparent);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .meter-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+            animation: shimmer 3s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { left: -100%; }
+            100% { left: 150%; }
+        }
+
+        .meter-text {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--text-secondary);
+            position: relative;
+        }
+
+        .empty-state::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, rgba(243, 156, 18, 0.1), transparent);
+            transform: translate(-50%, -50%);
+            border-radius: 50%;
+            animation: pulse-bg 3s ease-in-out infinite;
+        }
+
+        @keyframes pulse-bg {
+            0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.5; }
+            50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.8; }
+        }
+
+        .empty-state i {
+            font-size: 5rem;
+            margin-bottom: 1.5rem;
+            opacity: 0.4;
+            color: var(--accent);
+            position: relative;
+            z-index: 1;
+            animation: float-icon 4s ease-in-out infinite;
+        }
+
+        @keyframes float-icon {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .empty-state h3 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+            position: relative;
+            z-index: 1;
+        }
+
+        .empty-state p {
+            font-size: 1rem;
+            position: relative;
+            z-index: 1;
+            max-width: 300px;
+            margin: 0 auto;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .input-group {
+                flex-direction: column;
+            }
+            
+            .stats-bar {
+                gap: 1rem;
+            }
+            
+            .stat-item {
+                padding: 0.8rem 1.5rem;
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .celebration {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: var(--accent);
+            pointer-events: none;
+            z-index: 1000;
+            animation: celebrate 1.5s ease-out;
+            text-shadow: 0 0 20px rgba(243, 156, 18, 0.8);
+        }
+
+        @keyframes celebrate {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.3) rotate(-180deg);
+            }
+            50% {
+                transform: translate(-50%, -50%) scale(1.3) rotate(0deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1) translateY(-80px) rotate(180deg);
+            }
+        }
+
+        /* Loading States */
+        .loading-shimmer {
+            background: linear-gradient(90deg, 
+                rgba(255, 255, 255, 0.1) 25%, 
+                rgba(255, 255, 255, 0.2) 50%, 
+                rgba(255, 255, 255, 0.1) 75%);
+            background-size: 200% 100%;
+            animation: shimmer-loading 1.5s infinite;
+        }
+
+        @keyframes shimmer-loading {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        /* Scroll Enhancements */
+        .anti-todo-list::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .anti-todo-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            margin: 4px;
+        }
+
+        .anti-todo-list::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+
+        .anti-todo-list::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-hover);
+            background-clip: content-box;
+        }
+
+        /* Micro-interactions */
+        .micro-bounce {
+            animation: micro-bounce 0.3s ease-out;
+        }
+
+        @keyframes micro-bounce {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        .ripple-effect {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple-effect::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .ripple-effect:active::before {
+            width: 300px;
+            height: 300px;
+        }
+
+        /* Enhanced Focus States */
+        .task-input:focus,
+        .refresh-quote:focus,
+        .add-btn:focus,
+        .filter-tab:focus,
+        .action-btn:focus {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+        }
+
+        /* Typography Enhancements */
+        .gradient-text {
+            background: linear-gradient(45deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Glass morphism enhancement */
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Particle Effects */
+        .particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .particle {
+            position: absolute;
+            background: var(--accent);
+            border-radius: 50%;
+            opacity: 0.6;
+            animation: particle-float 4s infinite ease-in-out;
+        }
+
+        @keyframes particle-float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.6;
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 1;
+            }
+        }
+
+        /* Settings panel */
+        .settings-btn {
+            position: fixed;
+            top: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            z-index: 1001;
+        }
+        
+        .settings-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        
+        .settings-panel {
+            position: fixed;
+            top: 0;
+            right: -300px;
+            width: 300px;
+            height: 100vh;
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+        
+        .settings-panel.open {
+            right: 0;
+        }
+        
+        .theme-switcher {
+            margin: 2rem 0;
+        }
+        
+        .theme-option {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        
+        .theme-option:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
+        .dark-mode {
+            --primary-gradient: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            --card-bg: rgba(0, 0, 0, 0.3);
+        }
+        
+        .light-mode {
+            --primary-gradient: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            --card-bg: rgba(255, 255, 255, 0.9);
+            --text-primary: #2d3436;
+            --text-secondary: #636e72;
+        }
+
+        /* Notification styles */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 500;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="animated-bg"></div>
+    
+    <button class="settings-btn" id="settingsBtn">
+        <i class="fas fa-cog"></i>
+    </button>
+    
+    <div class="settings-panel" id="settingsPanel">
+        <h3 style="margin-bottom: 2rem;">Settings</h3>
+        
+        <div class="theme-switcher">
+            <h4 style="margin-bottom: 1rem;">Theme</h4>
+            <div class="theme-option" data-theme="default">
+                <i class="fas fa-palette" style="margin-right: 1rem; color: #667eea;"></i>
+                Default
+            </div>
+            <div class="theme-option" data-theme="dark">
+                <i class="fas fa-moon" style="margin-right: 1rem; color: #2c3e50;"></i>
+                Dark Mode
+            </div>
+            <div class="theme-option" data-theme="light">
+                <i class="fas fa-sun" style="margin-right: 1rem; color: #f39c12;"></i>
+                Light Mode
+            </div>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <h4 style="margin-bottom: 1rem;">Data Management</h4>
+            <button id="exportBtn" style="width: 100%; padding: 1rem; margin-bottom: 1rem; background: var(--secondary-gradient); border: none; border-radius: 8px; color: white; cursor: pointer;">
+                <i class="fas fa-download"></i> Export Data
+            </button>
+            <input type="file" id="importFile" accept=".json" style="display: none;">
+            <button id="importBtn" style="width: 100%; padding: 1rem; margin-bottom: 1rem; background: var(--success-gradient); border: none; border-radius: 8px; color: white; cursor: pointer;">
+                <i class="fas fa-upload"></i> Import Data
+            </button>
+            <button id="clearBtn" style="width: 100%; padding: 1rem; background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%); border: none; border-radius: 8px; color: white; cursor: pointer;">
+                <i class="fas fa-trash"></i> Clear All Data
+            </button>
+        </div>
+        
+        <div style="margin-top: 2rem;">
+            <h4 style="margin-bottom: 1rem;">Keyboard Shortcuts</h4>
+            <div style="font-size: 0.9rem; color: var(--text-secondary);">
+                <p><strong>Alt + A:</strong> Focus input field</p>
+                <p><strong>Alt + R:</strong> Random quote</p>
+                <p><strong>Enter:</strong> Add task</p>
+                <p><strong>Esc:</strong> Close settings</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <header class="header">
+            <h1 class="logo">Anti-To-Do</h1>
+            <p class="tagline">Productivity Reimagined • Embrace What You Won't Do</p>
+            
+            <div class="stats-bar">
+                <div class="stat-item">
+                    <div class="stat-number" id="totalTasks">0</div>
+                    <div class="stat-label">Total Items</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="refusedTasks">0</div>
+                    <div class="stat-label">Refused</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-number" id="refusalRate">0%</div>
+                    <div class="stat-label">Refusal Rate</div>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <div class="anti-todo-section">
+                <h2 class="section-title">
+                    <i class="fas fa-ban"></i>
+                    Things I Refuse To Do Today
+                </h2>
+                
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        class="task-input" 
+                        id="taskInput" 
+                        placeholder="What are you absolutely NOT doing today?"
+                        maxlength="200"
+                    >
+                    <button class="add-btn" id="addTaskBtn">
+                        <i class="fas fa-plus"></i> Add Refusal
+                    </button>
+                </div>
+
+                <div class="filter-tabs">
+                    <button class="filter-tab active" data-filter="all">All Items</button>
+                    <button class="filter-tab" data-filter="pending">Pending</button>
+                    <button class="filter-tab" data-filter="refused">Refused</button>
+                </div>
+
+                <div class="anti-todo-list" id="antiTodoList">
+                    <div class="empty-state">
+                        <i class="fas fa-clipboard-list"></i>
+                        <h3>No refusals yet!</h3>
+                        <p>Add something you absolutely won't do today.</p>
+                    </div>
+                </div>
+            </div>
+
+            <aside class="sidebar">
+                <div class="quote-card">
+                    <div class="quote-content">
+                        <p class="quote-text" id="quoteText">"The art of being wise is knowing what to overlook."</p>
+                        <p class="quote-author" id="quoteAuthor">— William James</p>
+                        <button class="refresh-quote" id="refreshQuote">
+                            <i class="fas fa-sync-alt"></i> New Quote
+                        </button>
+                    </div>
+                </div>
+
+                <div class="productivity-meter">
+                    <h3 class="meter-title">Anti-Productivity Score</h3>
+                    <div class="meter-bar">
+                        <div class="meter-fill" id="meterFill" style="width: 0%"></div>
+                    </div>
+                    <p class="meter-text" id="meterText">Ready to start refusing!</p>
+                </div>
+            </aside>
+        </main>
+    </div>
+
+    <script>
+        class AntiTodoApp {
+            constructor() {
+                this.tasks = JSON.parse(localStorage.getItem('antiTodoTasks')) || [];
+                this.currentFilter = 'all';
+                this.quotes = [
+                    { text: "The art of being wise is knowing what to overlook.", author: "William James" },
+                    { text: "Saying no to others means saying yes to yourself.", author: "Paulo Coelho" },
+                    { text: "It is not enough to be busy. The question is: what are we busy about?", author: "Henry David Thoreau" },
+                    { text: "The successful person has the habit of doing the things failures don't like to do.", author: "E.M. Gray" },
+                    { text: "Sometimes the most productive thing you can do is relax.", author: "Mark Black" },
+                    { text: "Don't be busy, be productive.", author: "Anonymous" },
+                    { text: "Focus on being productive instead of staying busy.", author: "Tim Ferriss" },
+                    { text: "Efficiency is doing things right; effectiveness is doing the right things.", author: "Peter Drucker" },
+                    { text: "The key is not to prioritize what's on your schedule, but to schedule your priorities.", author: "Stephen Covey" },
+                    { text: "Perfectionism is the enemy of progress.", author: "Winston Churchill" }
+                ];
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.renderTasks();
+                this.updateStats();
+                this.updateProductivityMeter();
+                this.showRandomQuote();
+            }
+
+            bindEvents() {
+                // Core functionality
+                document.getElementById('addTaskBtn').addEventListener('click', () => this.addTask());
+                document.getElementById('taskInput').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+                document.getElementById('refreshQuote').addEventListener('click', () => this.showRandomQuote());
+                
+                // Filter tabs
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.addEventListener('click', (e) => this.setFilter(e.target.dataset.filter));
+                });
+                
+                // Settings panel
+                document.getElementById('settingsBtn').addEventListener('click', () => this.toggleSettings());
+                
+                // Theme switcher
+                document.querySelectorAll('.theme-option').forEach(option => {
+                    option.addEventListener('click', () => this.setTheme(option.dataset.theme));
+                });
+                
+                // Data management
+                document.getElementById('exportBtn').addEventListener('click', () => this.exportData());
+                document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+                document.getElementById('importFile').addEventListener('change', (e) => this.importData(e));
+                document.getElementById('clearBtn').addEventListener('click', () => this.clearAllData());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    // Alt + A to focus on input
+                    if (e.altKey && e.key === 'a') {
+                        e.preventDefault();
+                        document.getElementById('taskInput').focus();
+                    }
+                    
+                    // Alt + R for random quote
+                    if (e.altKey && e.key === 'r') {
+                        e.preventDefault();
+                        this.showRandomQuote();
+                    }
+                    
+                    // Escape to close settings
+                    if (e.key === 'Escape') {
+                        this.closeSettings();
+                    }
+                });
+                
+                // Close settings when clicking outside
+                document.addEventListener('click', (e) => {
+                    const panel = document.getElementById('settingsPanel');
+                    const btn = document.getElementById('settingsBtn');
+                    if (!panel.contains(e.target) && !btn.contains(e.target)) {
+                        this.closeSettings();
+                    }
+                });
+            }
+
+            addTask() {
+                const input = document.getElementById('taskInput');
+                const text = input.value.trim();
+                
+                if (!text) return;
+
+                const task = {
+                    id: Date.now(),
+                    text: text,
+                    refused: false,
+                    createdAt: new Date().toISOString()
+                };
+
+                this.tasks.unshift(task);
+                this.saveTasks();
+                this.renderTasks();
+                this.updateStats();
+                this.updateProductivityMeter();
+                
+                input.value = '';
+                input.focus();
+                
+                this.showNotification('Refusal added successfully!', 'success');
+            }
+
+            toggleTaskRefusal(id) {
+                const task = this.tasks.find(t => t.id === id);
+                if (task) {
+                    task.refused = !task.refused;
+                    this.saveTasks();
+                    this.renderTasks();
+                    this.updateStats();
+                    this.updateProductivityMeter();
+                    
+                    if (task.refused) {
+                        this.showCelebration();
+                        this.showNotification('Item refused!', 'success');
+                    } else {
+                        this.showNotification('Item unmarked', 'success');
+                    }
+                }
+            }
+
+            deleteTask(id) {
+                this.tasks = this.tasks.filter(t => t.id !== id);
+                this.saveTasks();
+                this.renderTasks();
+                this.updateStats();
+                this.updateProductivityMeter();
+                this.showNotification('Item deleted', 'success');
+            }
+
+            setFilter(filter) {
+                this.currentFilter = filter;
+                document.querySelectorAll('.filter-tab').forEach(tab => {
+                    tab.classList.toggle('active', tab.dataset.filter === filter);
+                });
+                this.renderTasks();
+            }
+
+            getFilteredTasks() {
+                switch (this.currentFilter) {
+                    case 'pending':
+                        return this.tasks.filter(t => !t.refused);
+                    case 'refused':
+                        return this.tasks.filter(t => t.refused);
+                    default:
+                        return this.tasks;
+                }
+            }
+
+            renderTasks() {
+                const container = document.getElementById('antiTodoList');
+                const filteredTasks = this.getFilteredTasks();
+                
+                if (filteredTasks.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="fas fa-clipboard-list"></i>
+                            <h3>${this.getEmptyStateMessage()}</h3>
+                            <p>${this.getEmptyStateSubtext()}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = filteredTasks.map((task, index) => `
+                    <div class="anti-todo-item ${task.refused ? 'refused' : ''} fade-in glass-effect" 
+                         style="animation-delay: ${index * 0.1}s">
+                        <div class="task-content">
+                            <div class="task-checkbox ${task.refused ? 'checked' : ''} ripple-effect" 
+                                 onclick="app.toggleTaskRefusal(${task.id})"></div>
+                            <span class="task-text ${task.refused ? 'refused' : ''}">${this.escapeHtml(task.text)}</span>
+                            <div class="task-actions">
+                                <button class="action-btn delete-btn ripple-effect" 
+                                        onclick="app.deleteTask(${task.id})" 
+                                        title="Delete task"
+                                        aria-label="Delete task">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            getEmptyStateMessage() {
+                switch (this.currentFilter) {
+                    case 'pending':
+                        return 'No pending refusals!';
+                    case 'refused':
+                        return 'No refused tasks yet!';
+                    default:
+                        return 'No refusals yet!';
+                }
+            }
+
+            getEmptyStateSubtext() {
+                switch (this.currentFilter) {
+                    case 'pending':
+                        return 'Great job refusing everything!';
+                    case 'refused':
+                        return 'Check off some items to see them here.';
+                    default:
+                        return 'Add something you absolutely won\'t do today.';
+                }
+            }
+
+            updateStats() {
+                const total = this.tasks.length;
+                const refused = this.tasks.filter(t => t.refused).length;
+                const rate = total > 0 ? Math.round((refused / total) * 100) : 0;
+
+                document.getElementById('totalTasks').textContent = total;
+                document.getElementById('refusedTasks').textContent = refused;
+                document.getElementById('refusalRate').textContent = `${rate}%`;
+            }
+
+            updateProductivityMeter() {
+                const total = this.tasks.length;
+                const refused = this.tasks.filter(t => t.refused).length;
+                const percentage = total > 0 ? (refused / total) * 100 : 0;
+                
+                const meterFill = document.getElementById('meterFill');
+                const meterText = document.getElementById('meterText');
+                
+                meterFill.style.width = `${percentage}%`;
+                
+                let message = '';
+                if (percentage === 0) {
+                    message = 'Ready to start refusing!';
+                } else if (percentage < 25) {
+                    message = 'Getting started with boundaries!';
+                } else if (percentage < 50) {
+                    message = 'Building healthy habits!';
+                } else if (percentage < 75) {
+                    message = 'Master of saying no!';
+                } else if (percentage < 100) {
+                    message = 'Refusal champion!';
+                } else {
+                    message = 'Perfect anti-productivity!';
+                }
+                
+                meterText.textContent = message;
+            }
+
+            showRandomQuote() {
+                const randomQuote = this.quotes[Math.floor(Math.random() * this.quotes.length)];
+                document.getElementById('quoteText').textContent = `"${randomQuote.text}"`;
+                document.getElementById('quoteAuthor').textContent = `— ${randomQuote.author}`;
+            }
+
+            showCelebration() {
+                const celebrations = [
+                    '🚫 Refused! 🎉',
+                    '✋ Boundaries Set! 💪',
+                    '🙅‍♀️ Not Today! ⭐',
+                    '🛡️ Protected Time! 🌟',
+                    '🎯 Focus Achieved! 🔥'
+                ];
+                
+                const celebration = document.createElement('div');
+                celebration.className = 'celebration';
+                celebration.innerHTML = celebrations[Math.floor(Math.random() * celebrations.length)];
+                document.body.appendChild(celebration);
+                
+                // Add particles effect
+                this.createParticles();
+                
+                setTimeout(() => {
+                    if (document.body.contains(celebration)) {
+                        document.body.removeChild(celebration);
+                    }
+                }, 1500);
+            }
+
+            createParticles() {
+                const particleContainer = document.createElement('div');
+                particleContainer.className = 'particles';
+                particleContainer.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    pointer-events: none;
+                    z-index: 999;
+                `;
+                
+                for (let i = 0; i < 15; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.cssText = `
+                        position: absolute;
+                        width: ${Math.random() * 6 + 2}px;
+                        height: ${Math.random() * 6 + 2}px;
+                        background: ${['#f39c12', '#e74c3c', '#3498db', '#2ecc71'][Math.floor(Math.random() * 4)]};
+                        border-radius: 50%;
+                        left: ${Math.random() * 100}vw;
+                        top: ${Math.random() * 100}vh;
+                        animation: particle-float ${Math.random() * 3 + 2}s ease-out forwards;
+                    `;
+                    particleContainer.appendChild(particle);
+                }
+                
+                document.body.appendChild(particleContainer);
+                
+                setTimeout(() => {
+                    if (document.body.contains(particleContainer)) {
+                        document.body.removeChild(particleContainer);
+                    }
+                }, 5000);
+            }
+
+            toggleSettings() {
+                const panel = document.getElementById('settingsPanel');
+                panel.classList.toggle('open');
+            }
+            
+            closeSettings() {
+                document.getElementById('settingsPanel').classList.remove('open');
+            }
+
+            setTheme(theme) {
+                document.body.className = theme === 'default' ? '' : `${theme}-mode`;
+                localStorage.setItem('antiTodoTheme', theme);
+                this.showNotification('Theme changed', 'success');
+            }
+
+            exportData() {
+                const dataStr = JSON.stringify(this.tasks, null, 2);
+                const dataBlob = new Blob([dataStr], {type: 'application/json'});
+                const url = URL.createObjectURL(dataBlob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'anti-todo-backup.json';
+                link.click();
+                URL.revokeObjectURL(url);
+                this.showNotification('Data exported successfully!', 'success');
+            }
+
+            importData(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+                
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedTasks = JSON.parse(e.target.result);
+                        if (Array.isArray(importedTasks)) {
+                            this.tasks = importedTasks;
+                            this.saveTasks();
+                            this.renderTasks();
+                            this.updateStats();
+                            this.updateProductivityMeter();
+                            this.showNotification('Data imported successfully!', 'success');
+                        }
+                    } catch (error) {
+                        this.showNotification('Invalid file format!', 'error');
+                    }
+                };
+                reader.readAsText(file);
+                document.getElementById('importFile').value = '';
+            }
+
+            clearAllData() {
+                if (confirm('Are you sure you want to clear all data? This cannot be undone.')) {
+                    this.tasks = [];
+                    this.saveTasks();
+                    this.renderTasks();
+                    this.updateStats();
+                    this.updateProductivityMeter();
+                    this.showNotification('All data cleared!', 'success');
+                }
+            }
+
+            showNotification(message, type = 'success') {
+                const notification = document.createElement('div');
+                notification.className = `notification ${type}`;
+                notification.textContent = message;
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease-out';
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            document.body.removeChild(notification);
+                        }
+                    }, 300);
+                }, 3000);
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            saveTasks() {
+                localStorage.setItem('antiTodoTasks', JSON.stringify(this.tasks));
+            }
+        }
+
+        // Initialize the app
+        const app = new AntiTodoApp();
+
+        // Add sample tasks for demo purposes
+        if (app.tasks.length === 0) {
+            const sampleTasks = [
+                "Check social media every 5 minutes",
+                "Stress about things I can't control", 
+                "Say yes to every meeting request",
+                "Work through lunch break",
+                "Perfectionism on minor tasks"
+            ];
+            
+            sampleTasks.forEach((text, index) => {
+                const task = {
+                    id: Date.now() + index,
+                    text: text,
+                    refused: index < 2,
+                    createdAt: new Date().toISOString()
+                };
+                app.tasks.push(task);
+            });
+            app.saveTasks();
+            app.renderTasks();
+            app.updateStats();
+            app.updateProductivityMeter();
+        }
+
+        // Load saved theme
+        const savedTheme = localStorage.getItem('antiTodoTheme');
+        if (savedTheme && savedTheme !== 'default') {
+            app.setTheme(savedTheme);
+        }
+    </script>
+</body>
+</html>
